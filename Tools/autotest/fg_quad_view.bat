@@ -1,5 +1,5 @@
 set AUTOTESTDIR="%~dp0\aircraft"
-c:
+f:
 FOR /F "delims=" %%D in ('dir /b "\Program Files"\FlightGear*') DO set FGDIR=%%D
 echo "Using FlightGear %FGDIR%"
 cd "\Program Files\%FGDIR%\bin"
