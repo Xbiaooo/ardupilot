@@ -1119,7 +1119,7 @@ public:
 
 protected:
 
-    const char *name() const override { return "DRAWSTAR"; }
+    const char *name() const override { return "DRAW_STAR"; }
     const char *name4() const override { return "STAR"; }
 
 private:
