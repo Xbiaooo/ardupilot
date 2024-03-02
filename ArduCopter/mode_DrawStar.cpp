@@ -84,7 +84,7 @@ void ModeDrawStar::pos_control_run()  // 注意，此函数直接从mode_guided.
 
     // call attitude controller with auto yaw
     attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
-
+    
 }
 
 
