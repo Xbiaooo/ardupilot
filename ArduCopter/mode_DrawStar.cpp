@@ -64,7 +64,7 @@ void ModeDrawStar::run()
 
 }
 
-void ModeDrawStar::pos_control_run()  // 注意，此函数直接从mode_guided.cpp中复制过来，不需要该其中的内容
+void ModeDrawStar::pos_control_run()  // 注意，此函数直接从mode_guided.cpp中复制过来，不需要改其中的内容
 {
     // if not armed set throttle to zero and exit immediately
     if (is_disarmed_or_landed()) {
