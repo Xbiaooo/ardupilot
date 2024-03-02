@@ -206,7 +206,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 // DrawStar mode - 五角星航线模式
-#ifndef MODE_DrawStar_ENABLED
+#ifndef MODE_DRAWSTAR_ENABLED
 # define MODE_DRAWSTAR_ENABLED ENABLED
 #endif
 
