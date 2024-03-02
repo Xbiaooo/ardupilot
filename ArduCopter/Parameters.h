@@ -686,13 +686,15 @@ public:
     AC_WeatherVane weathervane;
 #endif
 
-    AP_Float star_radius_cm;    //五角星大小，单位cm
 
     // payload place parameters
     AP_Float pldp_thrust_placed_fraction;
     AP_Float pldp_range_finder_minimum_m;
     AP_Float pldp_delay_s;
     AP_Float pldp_descent_speed_ms;
+
+    AP_Float star_radius_cm;    //五角星大小，单位cm
+    
 };
 
 extern const AP_Param::Info        var_info[];
