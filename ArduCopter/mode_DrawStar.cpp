@@ -24,12 +24,21 @@ void ModeDrawStar::generate_path()
 
     wp_nav->get_wp_stopping_point(path[0]);
 
-    path[1] = path[0] + Vector3f(1.0f, 0, 0) * radius_cm;
-    path[2] = path[0] + Vector3f(-cosf(radians(36.0f)), -sinf(radians(36.0f)), 0) * radius_cm;
-    path[3] = path[0] + Vector3f(sinf(radians(18.0f)), cosf(radians(18.0f)), 0) * radius_cm;
-    path[4] = path[0] + Vector3f(sinf(radians(18.0f)), -cosf(radians(18.0f)), 0) * radius_cm;
-    path[5] = path[0] + Vector3f(-cosf(radians(36.0f)), sinf(radians(36.0f)), 0) * radius_cm;
-    path[6] = path[1];    
+    //xy轴绘制五角星
+    // path[1] = path[0] + Vector3f(1.0f, 0, 0) * radius_cm;
+    // path[2] = path[0] + Vector3f(-cosf(radians(36.0f)), -sinf(radians(36.0f)), 0) * radius_cm;
+    // path[3] = path[0] + Vector3f(sinf(radians(18.0f)), cosf(radians(18.0f)), 0) * radius_cm;
+    // path[4] = path[0] + Vector3f(sinf(radians(18.0f)), -cosf(radians(18.0f)), 0) * radius_cm;
+    // path[5] = path[0] + Vector3f(-cosf(radians(36.0f)), sinf(radians(36.0f)), 0) * radius_cm;
+    // path[6] = path[1];   
+
+    //yz轴绘制五角星
+    path[1] = path[0] + Vector3f(0, 0, 1.0f) * radius_cm;
+    path[2] = path[0] + Vector3f(0, -sinf(radians(36.0f)), -cosf(radians(36.0f))) * radius_cm;
+    path[3] = path[0] + Vector3f(0, cosf(radians(18.0f)), sinf(radians(18.0f))) * radius_cm;
+    path[4] = path[0] + Vector3f(0, -cosf(radians(18.0f)), sinf(radians(18.0f))) * radius_cm;
+    path[5] = path[0] + Vector3f(0, sinf(radians(36.0f)), -cosf(radians(36.0f))) * radius_cm;
+    path[6] = path[1];   
 
 }
 
