@@ -8,16 +8,29 @@
 #define HAL_WITH_POSTYPE_DOUBLE BOARD_FLASH_SIZE > 1024
 #endif
 
+// #if HAL_WITH_POSTYPE_DOUBLE
+// typedef double postype_t;
+// typedef Vector2d Vector2p;
+// typedef Vector3d Vector3p;
+// #define topostype todouble
+// #else
+// typedef float postype_t;
+// typedef Vector2f Vector2p;
+// typedef Vector3f Vector3p;
+// #define topostype tofloat
+// #endif
+
 #if HAL_WITH_POSTYPE_DOUBLE
-typedef double postype_t;
-typedef Vector2d Vector2p;
-typedef Vector3d Vector3p;
-#define topostype todouble
-#else
 typedef float postype_t;
 typedef Vector2f Vector2p;
 typedef Vector3f Vector3p;
 #define topostype tofloat
+#else
+
+typedef double postype_t;
+typedef Vector2d Vector2p;
+typedef Vector3d Vector3p;
+#define topostype todouble
 #endif
 
 /*

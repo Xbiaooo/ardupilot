@@ -5,7 +5,7 @@
 /*
  * 画爱心
  */
-
+#define DO_NOT_USE_DOUBLE_MATHS
 
 
 bool ModeDrawLove::init(bool ignore_checks)
@@ -81,10 +81,13 @@ void ModeDrawLove::run()
     //     gcs().send_text(MAV_SEVERITY_INFO, "Draw star finished, now go into loiter mode");
     //     copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);  // 切换到loiter模式
     // }
-
+    gcs().send_text(MAV_SEVERITY_CRITICAL, 
+                "目前航点: %d",path_num);
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, 
+    //             "当前距离: %d",path_num);            
     pos_xy = inertial_nav.get_position_xy_cm();
     float distance; 
-    distance = (pow(pos_xy.x-path[path_num+1].x, 2) + pow(pos_xy.y-path[path_num+1].y, 2));
+    distance = sqrtf(powf(pos_xy.x-path[path_num+1].x, 2.0f) + powf(pos_xy.y-path[path_num+1].y, 2.0f));
     if (path_num < 3){
         //distance = (pow(pos_xy.x-path[path_num+1].x, 2) + pow(pos_xy.y-path[path_num+1].y, 2));
         if (distance < 20.0f){//到达了要去的下个航点

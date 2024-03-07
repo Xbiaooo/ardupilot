@@ -1129,7 +1129,7 @@ protected:
     //int32_t wp_bearing() const override;
 
 private:
-    Vector3d center[10]; //画圆的圆心数组
+    Vector3f center[10]; //画圆的圆心数组
     Vector3f path[10];  //航点数组
     Vector2f pos_xy;
     int path_num;   //当前航点号
