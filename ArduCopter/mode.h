@@ -1132,8 +1132,10 @@ private:
     Vector3f center[10]; //画圆的圆心数组
     Vector3f path[10];  //航点数组
     Vector2f pos_xy;
+    float radius[10];
     int path_num;   //当前航点号
     int center_num;  //当前圆心号
+    float radius_cm = 1000.0f;
 
     void generate_point();   //生成各圆心和航点
     void pos_control_start();   //开始位置控制

@@ -22,7 +22,7 @@ bool ModeDrawLove::init(bool ignore_checks)
 void ModeDrawLove::generate_point()
 {
     //float radius_cm = g2.star_radius_cm;
-    float radius_cm = 1000.0f;
+    
     //wp_nav->get_wp_stopping_point(path[0]);
 
     //生成圆心
@@ -31,11 +31,19 @@ void ModeDrawLove::generate_point()
     center[2] = center[0];
     center[3] = center[1];    
 
+    //生成半径
+    radius[0] = radius_cm;
+    radius[1] = 3*radius_cm;
+    radius[2] = radius[1];
+    radius[3] = radius[0];
+
     //生成航点
     path[1] = path[0] - Vector3f(0, 2.0f ,0) * radius_cm;
-    path[2] = path[0] - Vector3f(20.0f * safe_sqrt(2.0f), 0, 0) * radius_cm;
+    path[2] = path[0] - Vector3f(2.0f * safe_sqrt(2.0f), 0, 0) * radius_cm;
     path[3] = path[0] + Vector3f(0, 2.0f ,0) * radius_cm; 
     path[4] = path[1];
+
+    
 
 }
 
@@ -58,8 +66,11 @@ void ModeDrawLove::pos_control_start()
     // wp_nav->set_spline_destination(path[1], false, path[2], false, false);
 
     // 初始化画圆控制器
-    //copter.circle_nav->init(center[0], false, copter.circle_nav->get_rate());
-    copter.circle_nav->init();//这种初始化能使直接画圆
+    copter.circle_nav->init(center[0], false, -20.0f);
+    copter.circle_nav->set_radius_cm(radius[0]);
+    copter.circle_nav->get_closest_point_on_circle(path[1]);
+    //copter.circle_nav->init();//这种初始化能使直接画圆
+    //copter.circle_nav->set_center(center[0], false);
     
     // initialise yaw
     //auto_yaw.set_mode_to_default(false);
@@ -90,14 +101,16 @@ void ModeDrawLove::run()
     distance = sqrtf(powf(pos_xy.x-path[path_num+1].x, 2.0f) + powf(pos_xy.y-path[path_num+1].y, 2.0f));
 
     gcs().send_text(MAV_SEVERITY_CRITICAL, 
-                "当前距离: %.1f",distance / 100.0f); 
+                "当前距离: %.1f",distance); 
+
 
     if (path_num < 3){
         //distance = (pow(pos_xy.x-path[path_num+1].x, 2) + pow(pos_xy.y-path[path_num+1].y, 2));
-        if (distance < 20.0f){//到达了要去的下个航点
+        if ((distance/100.0f) < 1.0f){//到达了要去的下个航点
             path_num++;
             center_num++;
             copter.circle_nav->init(center[center_num], false, copter.circle_nav->get_rate());
+            copter.circle_nav->set_radius_cm(radius[center_num]);
         }
     }else if((path_num == 3) && (distance < 20.0f)){//到达了最终航点(起始点)
         gcs().send_text(MAV_SEVERITY_INFO, "Draw love finished, now go into loiter mode");
