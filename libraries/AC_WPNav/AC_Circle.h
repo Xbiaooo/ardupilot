@@ -139,8 +139,8 @@ private:
     };
 
     // parameters
-    AP_Float    _radius_parm;   // radius of circle in cm loaded from params
-    AP_Float    _rate_parm;     // rotation speed in deg/sec
+    AP_Float    _radius_parm;   // radius of circle in cm loaded from params定义飞行的圆的半径
+    AP_Float    _rate_parm;     // rotation speed in deg/sec定义角速度（deg是角度、rag是弧度）
     AP_Int16    _options;       // stick control enable/disable
 
     // internal variables

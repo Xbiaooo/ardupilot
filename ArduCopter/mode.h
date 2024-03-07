@@ -39,7 +39,7 @@ public:
         AUTOROTATE =   26,  // Autonomous autorotation
         AUTO_RTL =     27,  // Auto RTL, this is not a true mode, AUTO will report as this mode if entered to perform a DO_LAND_START Landing sequence
         TURTLE =       28,  // Flip over after crash
-        DRAWSTAR =     29,  //五角星航线模式
+        DRAWLOVE =     29,  //五角星航线模式
 
         // Mode number 127 reserved for the "drone show mode" in the Skybrush
         // fork at https://github.com/skybrush-io/ardupilot
@@ -798,6 +798,7 @@ protected:
 private:
 
     // Circle
+    //当横滚速率设置为方便在0速率时停止，返回真
     bool speed_changing = false;     // true when the roll stick is being held to facilitate stopping at 0 rate
 };
 
@@ -1100,12 +1101,12 @@ private:
     bool _paused;
 };
 
-class ModeDrawStar : public Mode {
+class ModeDrawLove : public Mode {
 
 public:
     // inherit constructor
     using Mode::Mode;   
-    Number mode_number() const override { return Number::DRAWSTAR; }
+    Number mode_number() const override { return Number::DRAWLOVE; }
 
     bool init(bool ignore_checks) override;
     void run() override; 
@@ -1117,19 +1118,33 @@ public:
     bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下直接起飞
     bool in_guided_mode() const override { return true; } // 此模式是一种引导的模式
 
+    //将画爱心化为四个阶段
+    enum class SubMode {
+        Step0,
+        Step1,
+        Step2,
+        Step3,
+    }
 protected:
 
-    const char *name() const override { return "DRAW_STAR"; }
-    const char *name4() const override { return "STAR"; }
+    const char *name() const override { return "DRAW_LOVE"; }
+    const char *name4() const override { return "LOVE"; }
+
+    //for reporting to GCS
+
+    //uint32_t wp_distance() const override;
+    //int32_t wp_bearing() const override;
 
 private:
+    Vector3d circle_center[10]; //画圆的圆心数组
     Vector3f path[10];  //航点数组
     int path_num;   //当前航点号
 
-    void generate_path();   //生成航线
+    void generate_point();   //生成各圆心和航点
     void pos_control_start();   //开始位置控制
     void pos_control_run();     //位置控制周期调用函数
-
+    void circle_start();
+    void circle_run();
 };
 
 

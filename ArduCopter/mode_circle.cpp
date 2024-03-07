@@ -110,12 +110,12 @@ void ModeCircle::run()
 
 uint32_t ModeCircle::wp_distance() const
 {
-    return copter.circle_nav->get_distance_to_target();
+    return copter.circle_nav->get_distance_to_target();//定距离
 }
 
 int32_t ModeCircle::wp_bearing() const
 {
-    return copter.circle_nav->get_bearing_to_target();
+    return copter.circle_nav->get_bearing_to_target();//定方向
 }
 
 #endif
