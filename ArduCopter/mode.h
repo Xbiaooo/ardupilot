@@ -1116,7 +1116,7 @@ public:
     bool allows_arming(AP_Arming::Method method) const override { return false; }  // 不允许在此模式下解锁
     bool is_autopilot() const override { return true; } // 此模式为自动飞行控制
     bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下直接起飞
-    bool in_guided_mode() const override { return true; } // 此模式是一种引导的模式
+    //bool in_guided_mode() const override { return true; } // 此模式是一种引导的模式
 
 protected:
 

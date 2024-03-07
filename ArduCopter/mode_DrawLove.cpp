@@ -23,7 +23,7 @@ void ModeDrawLove::generate_point()
 {
     //float radius_cm = g2.star_radius_cm;
     float radius_cm = 1000.0f;
-    wp_nav->get_wp_stopping_point(path[0]);
+    //wp_nav->get_wp_stopping_point(path[0]);
 
     //生成圆心
     center[0] = path[0] - Vector3f(0, 1.0f ,0) * radius_cm;
@@ -58,7 +58,8 @@ void ModeDrawLove::pos_control_start()
     // wp_nav->set_spline_destination(path[1], false, path[2], false, false);
 
     // 初始化画圆控制器
-    copter.circle_nav->init(center[0], false, copter.circle_nav->get_rate());
+    //copter.circle_nav->init(center[0], false, copter.circle_nav->get_rate());
+    copter.circle_nav->init();//这种初始化能使直接画圆
     
     // initialise yaw
     //auto_yaw.set_mode_to_default(false);
@@ -81,15 +82,15 @@ void ModeDrawLove::run()
     //     gcs().send_text(MAV_SEVERITY_INFO, "Draw star finished, now go into loiter mode");
     //     copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);  // 切换到loiter模式
     // }
-    gcs().send_text(MAV_SEVERITY_CRITICAL, 
-                "目前航点: %d",path_num);
+    // gcs().send_text(MAV_SEVERITY_CRITICAL, 
+    //             "目前航点: %d",path_num);
                
     pos_xy = inertial_nav.get_position_xy_cm();
     float distance; 
     distance = sqrtf(powf(pos_xy.x-path[path_num+1].x, 2.0f) + powf(pos_xy.y-path[path_num+1].y, 2.0f));
 
     gcs().send_text(MAV_SEVERITY_CRITICAL, 
-                "当前距离: %.1f",distance); 
+                "当前距离: %.1f",distance / 100.0f); 
 
     if (path_num < 3){
         //distance = (pow(pos_xy.x-path[path_num+1].x, 2) + pow(pos_xy.y-path[path_num+1].y, 2));
