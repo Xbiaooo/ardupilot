@@ -1118,13 +1118,6 @@ public:
     bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下直接起飞
     bool in_guided_mode() const override { return true; } // 此模式是一种引导的模式
 
-    //将画爱心化为四个阶段
-    enum class SubMode {
-        Step0,
-        Step1,
-        Step2,
-        Step3,
-    }
 protected:
 
     const char *name() const override { return "DRAW_LOVE"; }
