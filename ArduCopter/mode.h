@@ -1136,15 +1136,17 @@ protected:
     //int32_t wp_bearing() const override;
 
 private:
-    Vector3d circle_center[10]; //画圆的圆心数组
+    Vector3d center[10]; //画圆的圆心数组
     Vector3f path[10];  //航点数组
+    Vector2f pos_xy;
     int path_num;   //当前航点号
+    int center_num;  //当前圆心号
 
     void generate_point();   //生成各圆心和航点
     void pos_control_start();   //开始位置控制
     void pos_control_run();     //位置控制周期调用函数
-    void circle_start();
-    void circle_run();
+    //void circle_start();
+    //void circle_run();
 };
 
 
