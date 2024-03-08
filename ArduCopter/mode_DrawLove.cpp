@@ -23,8 +23,8 @@ void ModeDrawLove::generate_point()
 {
     //float radius_cm = g2.star_radius_cm;
     
-    //wp_nav->get_wp_stopping_point(path[0]);
-    path[0] = inertial_nav.get_position_neu_cm();
+    wp_nav->get_wp_stopping_point(path[0]);
+    //path[0] = inertial_nav.get_position_neu_cm();
 
     //生成圆心
     center[0] = path[0] - Vector3f(0, 1.0f ,0) * radius_cm;
@@ -68,17 +68,20 @@ void ModeDrawLove::pos_control_start()
 
     // 初始化画圆控制器
     
-    copter.circle_nav->init(center[0], false, -10.0f);
+    //copter.circle_nav->init(center[0], false, -10.0f);
     //初始化圆心、画圆角速度和半径
-    /// copter.circle_nav->set_center(center[0], false);
-    /// copter.circle_nav->set_rate(-20.0f);
+    copter.circle_nav->set_center(center[0], false);
+    copter.circle_nav->set_rate(-20.0f);
     copter.circle_nav->set_radius_cm(radius[0]);
 
-    //得到该圆上距离无人机当前位置最近的点
-    /// Vector3f circle_edge_neu;
-    /// copter.circle_nav->get_closest_point_on_circle(circle_edge_neu);
 
-    /// wp_nav->set_wp_destination(circle_edge_neu,false);
+    
+    copter.circle_nav->init(copter.circle_nav->get_center(), copter.circle_nav->center_is_terrain_alt(), copter.circle_nav->get_rate());
+
+    //得到该圆上距离无人机当前位置最近的点
+    // Vector3f circle_edge_neu;
+    // copter.circle_nav->get_closest_point_on_circle(circle_edge_neu);
+    // wp_nav->set_wp_destination(circle_edge_neu,false);
 
     //copter.circle_nav->get_closest_point_on_circle(path[1]);
     //copter.circle_nav->init();//这种初始化能使直接画圆
@@ -107,7 +110,9 @@ void ModeDrawLove::run()
     // }
     // gcs().send_text(MAV_SEVERITY_CRITICAL, 
     //             "目前航点: %d",path_num);
-               
+
+    
+        
     pos_xy = inertial_nav.get_position_xy_cm();
     float distance; 
     distance = sqrtf(powf(pos_xy.x-path[path_num+1].x, 2.0f) + powf(pos_xy.y-path[path_num+1].y, 2.0f));
@@ -118,15 +123,26 @@ void ModeDrawLove::run()
 
     if (path_num < 3){
         //distance = (pow(pos_xy.x-path[path_num+1].x, 2) + pow(pos_xy.y-path[path_num+1].y, 2));
-        if ((distance/100.0f) < 1.0f){//到达了要去的下个航点
-            path_num++;
-            center_num++;
-            copter.circle_nav->init(center[center_num], false, copter.circle_nav->get_rate());
-            copter.circle_nav->set_radius_cm(radius[center_num]);
+        if ((distance/100.0f) < 2.0f){//到达了要去的下个航点
+            //wp_nav->wp_and_spline_init();
+            //wp_nav->set_wp_destination(path[path_num+1],false);
+            //if(wp_nav->reached_wp_destination()){
+                path_num++;
+                center_num++;
+                copter.circle_nav->init(center[center_num], false, copter.circle_nav->get_rate());
+                copter.circle_nav->set_radius_cm(radius[center_num]);
+            //} 
         }
-    }else if((path_num == 3) && ((distance/100.0f) < 1.0f)){//到达了最终航点(起始点)
-        gcs().send_text(MAV_SEVERITY_INFO, "Draw love finished, now go into loiter mode");
+    }else if(path_num == 3){//到达了最终航点(起始点)
+        if ((distance/100.0f) < 2.0f){
+            //wp_nav->set_wp_destination(path[path_num+1],false);
+            //if(wp_nav->reached_wp_destination()){
+                gcs().send_text(MAV_SEVERITY_INFO, "Draw love finished, now go into loiter mode");
         copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);  // 切换到loiter模式
+            //}
+        }
+        
+        
     }
 
     pos_control_run();  // 位置控制器
