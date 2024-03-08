@@ -23,11 +23,11 @@ void ModeDrawLove::generate_point()
 {
     //float radius_cm = g2.star_radius_cm;
     
-    //wp_nav->get_wp_stopping_point(path[0]);
+    wp_nav->get_wp_stopping_point(path[0]);
 
     //生成圆心
-    center[0] = path[0] - Vector3f(0, 1.0f ,0) * radius_cm;
-    center[1] = path[0] + Vector3f(0, 1.0f ,0) * radius_cm;
+    center[0] = path[0] + Vector3f(1.0f, 0 ,0) * radius_cm;
+    center[1] = path[0] - Vector3f(1.0f, 0 ,0) * radius_cm;
     center[2] = center[0];
     center[3] = center[1];    
 
@@ -38,9 +38,9 @@ void ModeDrawLove::generate_point()
     radius[3] = radius[0];
 
     //生成航点
-    path[1] = path[0] - Vector3f(0, 2.0f ,0) * radius_cm;
-    path[2] = path[0] - Vector3f(2.0f * safe_sqrt(2.0f), 0, 0) * radius_cm;
-    path[3] = path[0] + Vector3f(0, 2.0f ,0) * radius_cm; 
+    path[1] = path[0] + Vector3f(2.0f, 0 ,0) * radius_cm;
+    path[2] = path[0] - Vector3f(0, 2.0f * safe_sqrt(2.0f), 0) * radius_cm;
+    path[3] = path[0] - Vector3f(2.0f, 0 ,0) * radius_cm; 
     path[4] = path[0];
 
     
@@ -55,10 +55,10 @@ void ModeDrawLove::pos_control_start()
     //wp_nav->wp_and_spline_init();
 
     // set speed and acceleration limits
-    pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
-    pos_control->set_correction_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
-    pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
-    pos_control->set_correction_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
+    // pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    // pos_control->set_correction_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
+    // pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
+    // pos_control->set_correction_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
 
     // no need to check return status because terrain data is not used
     // 这两个目的地的初始化也不知道 有啥区别，看着效果差不多
@@ -66,12 +66,12 @@ void ModeDrawLove::pos_control_start()
     // wp_nav->set_spline_destination(path[1], false, path[2], false, false);
 
     // 初始化画圆控制器
-    
+    copter.circle_nav->set_radius_cm(radius[0]);
     copter.circle_nav->init(center[0], false, -10.0f);
     //初始化圆心、画圆角速度和半径
     /// copter.circle_nav->set_center(center[0], false);
     /// copter.circle_nav->set_rate(-20.0f);
-    copter.circle_nav->set_radius_cm(radius[0]);
+    
 
     //得到该圆上距离无人机当前位置最近的点
     /// Vector3f circle_edge_neu;
@@ -84,8 +84,8 @@ void ModeDrawLove::pos_control_start()
 
     
     // initialise yaw
-    //auto_yaw.set_mode_to_default(false);
-    auto_yaw.set_mode(AutoYaw::Mode::CIRCLE);
+    auto_yaw.set_mode_to_default(false);
+    //auto_yaw.set_mode(AutoYaw::Mode::CIRCLE);
 }
 
 //此模式的周期调用
