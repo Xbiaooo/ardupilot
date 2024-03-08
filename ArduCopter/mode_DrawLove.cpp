@@ -41,7 +41,7 @@ void ModeDrawLove::generate_point()
     path[1] = path[0] - Vector3f(0, 2.0f ,0) * radius_cm;
     path[2] = path[0] - Vector3f(2.0f * safe_sqrt(2.0f), 0, 0) * radius_cm;
     path[3] = path[0] + Vector3f(0, 2.0f ,0) * radius_cm; 
-    path[4] = path[1];
+    path[4] = path[0];
 
     
 
@@ -66,11 +66,22 @@ void ModeDrawLove::pos_control_start()
     // wp_nav->set_spline_destination(path[1], false, path[2], false, false);
 
     // 初始化画圆控制器
-    copter.circle_nav->init(center[0], false, -20.0f);
+    
+    copter.circle_nav->init(center[0], false, -10.0f);
+    //初始化圆心、画圆角速度和半径
+    /// copter.circle_nav->set_center(center[0], false);
+    /// copter.circle_nav->set_rate(-20.0f);
     copter.circle_nav->set_radius_cm(radius[0]);
-    copter.circle_nav->get_closest_point_on_circle(path[1]);
+
+    //得到该圆上距离无人机当前位置最近的点
+    /// Vector3f circle_edge_neu;
+    /// copter.circle_nav->get_closest_point_on_circle(circle_edge_neu);
+
+    /// wp_nav->set_wp_destination(circle_edge_neu,false);
+
+    //copter.circle_nav->get_closest_point_on_circle(path[1]);
     //copter.circle_nav->init();//这种初始化能使直接画圆
-    //copter.circle_nav->set_center(center[0], false);
+
     
     // initialise yaw
     //auto_yaw.set_mode_to_default(false);
@@ -112,7 +123,7 @@ void ModeDrawLove::run()
             copter.circle_nav->init(center[center_num], false, copter.circle_nav->get_rate());
             copter.circle_nav->set_radius_cm(radius[center_num]);
         }
-    }else if((path_num == 3) && (distance < 20.0f)){//到达了最终航点(起始点)
+    }else if((path_num == 3) && ((distance/100.0f) < 1.0f)){//到达了最终航点(起始点)
         gcs().send_text(MAV_SEVERITY_INFO, "Draw love finished, now go into loiter mode");
         copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);  // 切换到loiter模式
     }
