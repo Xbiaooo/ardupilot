@@ -24,6 +24,7 @@ void ModeDrawLove::generate_point()
     //float radius_cm = g2.star_radius_cm;
     
     //wp_nav->get_wp_stopping_point(path[0]);
+    path[0] = inertial_nav.get_position_neu_cm();
 
     //生成圆心
     center[0] = path[0] - Vector3f(0, 1.0f ,0) * radius_cm;
@@ -84,8 +85,8 @@ void ModeDrawLove::pos_control_start()
 
     
     // initialise yaw
-    //auto_yaw.set_mode_to_default(false);
-    auto_yaw.set_mode(AutoYaw::Mode::CIRCLE);
+    auto_yaw.set_mode_to_default(false);
+    //auto_yaw.set_mode(AutoYaw::Mode::CIRCLE);
 }
 
 //此模式的周期调用
