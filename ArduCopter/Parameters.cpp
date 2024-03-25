@@ -1166,7 +1166,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Description: 五角星航线中五角星的大小
     // @Units: cm
     // @User: Advanced
-    AP_GROUPINFO("STAR_R_CM", 63, ParametersG2, star_radius_cm, 1000.0f),
+    AP_GROUPINFO("STAR_R_CM", 63, ParametersG2, star_radius_cm, 200.0f),
 
 
     AP_GROUPEND
