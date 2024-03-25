@@ -174,6 +174,7 @@ protected:
     // convenience references to avoid code churn in conversion:
     Parameters &g;
     ParametersG2 &g2;
+    AC_Circle *&circle_nav;
     AC_WPNav *&wp_nav;
     AC_Loiter *&loiter_nav;
     AC_PosControl *&pos_control;
@@ -1129,13 +1130,19 @@ protected:
     //int32_t wp_bearing() const override;
 
 private:
+    Vector3f start_point;
     Vector3f center[10]; //画圆的圆心数组
-    Vector3f path[10];  //航点数组
-    Vector2f pos_xy;
+    Vector3f line[10];  //圆弧数组
+    //Vector2f pos_xy;
     float radius[10];
-    int path_num;   //当前航点号
+    float angle_set[10];//设置的四段弧线飞行的角度(deg)
+    int line_num;   //当前圆弧号
     int center_num;  //当前圆心号
     float radius_cm = 1000.0f;
+    float _angle_tatol;
+    float epsilon = 0.05;
+    bool ready_flag; //是否做好延时准备飞往下个航点
+    float angle_tatol[10];
 
     void generate_point();   //生成各圆心和航点
     void pos_control_start();   //开始位置控制
