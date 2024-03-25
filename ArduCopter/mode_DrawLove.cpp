@@ -88,8 +88,9 @@ void ModeDrawLove::pos_control_start()
 
     
     // initialise yaw
-    auto_yaw.set_mode_to_default(false);
+    //auto_yaw.set_mode_to_default(false);
     //auto_yaw.set_mode(AutoYaw::Mode::CIRCLE);
+    auto_yaw.set_mode(AutoYaw::Mode::HOLD);
 }
 
 //此模式的周期调用
