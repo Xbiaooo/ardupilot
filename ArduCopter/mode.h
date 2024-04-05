@@ -1135,11 +1135,13 @@ private:
     float radius[10];
     int path_num;   //当前航点号
     int center_num;  //当前圆心号
-    float radius_cm = 1000.0f;
+    float radius_cm = 100.0f;   //半径1m
+    bool flag = 0; //表示当前是画弧线还是直线（0弧线、1直线）
 
     void generate_point();   //生成各圆心和航点
     void pos_control_start();   //开始位置控制
-    void pos_control_run();     //位置控制周期调用函数
+    void pos_control_run1();     //位置控制周期调用函数（弧线）
+    void pos_control_run2();    //（直线）
     //void circle_start();
     //void circle_run();
 };
