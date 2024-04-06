@@ -191,6 +191,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #endif
     SCHED_TASK_CLASS(AP_Notify,            &copter.notify,              update,          50,  90,  78),
     SCHED_TASK(one_hz_loop,            1,    100,  81),
+    SCHED_TASK(update_OpenMV,        400,    100,  82),
     SCHED_TASK(ekf_check,             10,     75,  84),
     SCHED_TASK(check_vibration,       10,     50,  87),
     SCHED_TASK(gpsglitch_check,       10,     50,  90),
@@ -643,6 +644,11 @@ void Copter::one_hz_loop()
 #endif
 
     AP_Notify::flags.flying = !ap.land_complete;
+
+    gcs().send_text(MAV_SEVERITY_CRITICAL,
+                    "OpenMV X:%d Y:%d",
+                    openmv.cx,
+                    openmv.cy);
 }
 
 void Copter::init_simple_bearing()
@@ -773,6 +779,11 @@ bool Copter::get_rate_ef_targets(Vector3f& rate_ef_targets) const
         rate_ef_targets = attitude_control->get_rate_ef_targets();
     }
     return true;
+}
+
+void Copter::update_OpenMV()
+{
+    openmv.update() ;
 }
 
 /*
