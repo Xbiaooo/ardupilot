@@ -101,6 +101,26 @@ struct PACKED log_Data_Int16t {
     int16_t data_value;
 };
 
+struct PACKED log_OpenMV {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    uint8_t cx;
+    uint8_t cy;
+};
+
+// Write an OpenMV packet
+void Copter::Log_Write_OpenMV()
+{
+    struct log_OpenMV pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_OPENMV_MSG),
+        time_us         : AP_HAL::micros64(),
+        cx              : openmv.cx,
+        cy              : openmv.cy
+    };
+    //DataFlash.WriteBlock(&pkt, sizeof(pkt));
+    logger.WriteCriticalBlock(&pkt, sizeof(pkt));
+}
+
 // Write an int16_t data packet
 UNUSED_FUNCTION
 void Copter::Log_Write_Data(LogDataID id, int16_t value)
@@ -469,6 +489,8 @@ const struct LogStructure Copter::log_structure[] = {
 // @Field: Id: Data type identifier
 // @Field: Value: Value
 
+    { LOG_OPENMV_MSG, sizeof(log_OpenMV),
+    "OMV",   "QBB",   "TimeUS,cx,xy", "s--", "F--" },
     { LOG_CONTROL_TUNING_MSG, sizeof(log_Control_Tuning),
       "CTUN", "Qffffffefffhh", "TimeUS,ThI,ABst,ThO,ThH,DAlt,Alt,BAlt,DSAlt,SAlt,TAlt,DCRt,CRt", "s----mmmmmmnn", "F----00B000BB" , true },
     { LOG_DATA_INT16_MSG, sizeof(log_Data_Int16t),         

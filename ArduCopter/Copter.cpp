@@ -783,7 +783,12 @@ bool Copter::get_rate_ef_targets(Vector3f& rate_ef_targets) const
 
 void Copter::update_OpenMV()
 {
-    openmv.update() ;
+    //openmv.update();
+    if (openmv.update())
+    {
+        Log_Write_OpenMV();
+    }
+    
 }
 
 /*
