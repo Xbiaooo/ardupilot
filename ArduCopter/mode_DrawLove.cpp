@@ -71,7 +71,7 @@ void ModeDrawLove::pos_control_start()
     //copter.circle_nav->init(center[0], false, -10.0f);
     //初始化圆心、画圆角速度和半径
     copter.circle_nav->set_center(center[0], false);
-    copter.circle_nav->set_rate(10.0f);
+    copter.circle_nav->set_rate(15.0f);
     copter.circle_nav->set_radius_cm(radius[0]);
 
 
@@ -107,12 +107,12 @@ void ModeDrawLove::run()
 
     if (path_num < 3){
         //distance = (pow(pos_xy.x-path[path_num+1].x, 2) + pow(pos_xy.y-path[path_num+1].y, 2));
-        if ((distance/100.0f) < 0.25f){//到达了要去的下个航点
+        if ((distance/100.0f) < 0.30f){//到达了要去的下个航点
             if (flag == 0)
             {
                 wp_nav->wp_and_spline_init();
                 flag = 1;
-                auto_yaw.set_mode_to_default(false);
+                //auto_yaw.set_mode_to_default(false);
                 wp_nav->set_wp_destination(path[path_num+1],false);
             }
             else
@@ -122,14 +122,14 @@ void ModeDrawLove::run()
                     path_num++;
                     center_num++;
                     //auto_yaw.set_mode(AutoYaw::Mode::HOLD);
-                    auto_yaw.set_mode_to_default(false);
+                    //auto_yaw.set_mode_to_default(false);
                     if (path_num == 1 || path_num == 2)
                     {
-                        copter.circle_nav->set_rate(5.0f);
+                        copter.circle_nav->set_rate(10.0f);
                     }
                     else
                     {
-                       copter.circle_nav->set_rate(10.0f); 
+                       copter.circle_nav->set_rate(15.0f); 
                     }
                     copter.circle_nav->init(center[center_num], false, copter.circle_nav->get_rate());
                     copter.circle_nav->set_radius_cm(radius[center_num]);
@@ -137,12 +137,12 @@ void ModeDrawLove::run()
             }
         }
     }else if(path_num == 3){//到达了最终航点(起始点)
-        if ((distance/100.0f) < 0.25f){
+        if ((distance/100.0f) < 0.30f){
             if (flag == 0)
             {
                 flag = 1;
                 wp_nav->wp_and_spline_init();
-                auto_yaw.set_mode_to_default(false);
+                //auto_yaw.set_mode_to_default(false);
                 wp_nav->set_wp_destination(path[path_num+1],false);
             }
             else
