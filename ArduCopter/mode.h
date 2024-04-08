@@ -1112,10 +1112,32 @@ public:
 
     bool requires_GPS() const override { return true; } // 此模式需要有GPS定位
     bool has_manual_throttle() const override { return false; }  // 此模式不允许手动控制油门
-    bool allows_arming(AP_Arming::Method method) const override { return false; }  // 不允许在此模式下解锁
+    bool allows_arming(AP_Arming::Method method) const override { return true; }  // 允许在此模式下解锁
     bool is_autopilot() const override { return true; } // 此模式为自动飞行控制
-    bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下直接起飞
-    bool in_guided_mode() const override { return true; } // 此模式是一种引导的模式
+    bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下用户控制起飞
+    bool in_guided_mode() const override { return _mode == SubMode::DRAW5STAR; } // 此模式是一种引导的模式
+
+    // DrawStar modes 子模式
+    //整个过程分为起飞、画五角星 、降落3个模式
+    enum class SubMode : uint8_t {
+        TAKEOFF,
+        DRAW5STAR,
+        LAND,
+    };
+
+    // set submode.
+    void set_submode(SubMode new_submode);
+
+    // void takeoff_start();
+    // bool draw5star_start();
+    // void land_start();
+
+    // bool is_landing() const override;
+    // bool is_taking_off() const override;
+
+    // bool set_speed_xy(float speed_xy_cms) override;
+    // bool set_speed_up(float speed_up_cms) override;
+    // bool set_speed_down(float speed_down_cms) override;
 
 protected:
 
@@ -1129,6 +1151,16 @@ private:
     void generate_path();   //生成航线
     void pos_control_start();   //开始位置控制
     void pos_control_run();     //位置控制周期调用函数
+
+    //void takeoff_run();
+    void draw5star_run();
+    void land_run();
+
+    //land的参数
+    uint32_t land_start_time;
+    bool land_pause = true;
+
+    SubMode _mode = SubMode::DRAW5STAR;
 
 };
 

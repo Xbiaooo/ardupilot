@@ -32,14 +32,6 @@ void ModeDrawStar::generate_path()
     path[5] = path[0] + Vector3f(-cosf(radians(36.0f)), sinf(radians(36.0f)), 0) * radius_cm;
     path[6] = path[1];   
 
-    //yz轴绘制五角星
-    // path[1] = path[0] + Vector3f(0, 0, 1.0f) * radius_cm;
-    // path[2] = path[0] + Vector3f(0, -sinf(radians(36.0f)), -cosf(radians(36.0f))) * radius_cm;
-    // path[3] = path[0] + Vector3f(0, cosf(radians(18.0f)), sinf(radians(18.0f))) * radius_cm;
-    // path[4] = path[0] + Vector3f(0, -cosf(radians(18.0f)), sinf(radians(18.0f))) * radius_cm;
-    // path[5] = path[0] + Vector3f(0, sinf(radians(36.0f)), -cosf(radians(36.0f))) * radius_cm;
-    // path[6] = path[1];   
-
 }
 
 
@@ -59,18 +51,41 @@ void ModeDrawStar::pos_control_start()
 //此模式的周期调用
 void ModeDrawStar::run()
 {
+    switch (_mode)
+    {
+    case SubMode::TAKEOFF:
+        //takeoff_run();
+        break;
+
+    case SubMode::DRAW5STAR:
+        draw5star_run();
+        break;
+
+    case SubMode::LAND:
+        land_run();
+        break;
+    }
+
+
+}
+
+void ModeDrawStar::draw5star_run()
+{
     if (path_num < 6) {  // 五角星航线尚未走完
-        if (wp_nav->reached_wp_destination()) {  // 到达某个端点
+        if (wp_nav->reached_wp_destination()) 
+        {  // 到达某个端点
             path_num++;
             wp_nav->set_wp_destination(path[path_num], false);  // 将下一个航点位置设置为导航控制模块的目标位置
         }
-    } else if ((path_num == 6) && wp_nav->reached_wp_destination()) {  // 五角星航线运行完成，自动进入Loiter模式
-        gcs().send_text(MAV_SEVERITY_INFO, "Draw star finished, now go into loiter mode");
-        copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);  // 切换到loiter模式
+    } else if ((path_num == 6) && wp_nav->reached_wp_destination()) 
+    {  // 五角星航线运行完成，自动进入Loiter模式
+        gcs().send_text(MAV_SEVERITY_INFO, "Draw star finished, now go into land submode");
+        //copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);  // 切换到loiter模式
+        set_submode(SubMode::LAND);
+        land_start_time = millis();
     }
 
     pos_control_run();  // 位置控制器
-
 }
 
 void ModeDrawStar::pos_control_run()  // 注意，此函数直接从mode_guided.cpp中复制过来，不需要改其中的内容
@@ -96,5 +111,68 @@ void ModeDrawStar::pos_control_run()  // 注意，此函数直接从mode_guided.
     
 }
 
+void ModeDrawStar::set_submode(SubMode new_submode)
+{
+    // return immediately if the submode has not been changed
+    if (new_submode == _mode) {
+        return;
+    }
+
+    // backup old mode
+    //SubMode old_submode = _mode;
+
+    // set mode
+    _mode = new_submode;
+    
+}
+
+void ModeDrawStar::land_run()
+{
+    
+    // disarm when the landing detector says we've landed(降落后上锁-disarmed)
+    if (copter.ap.land_complete && motors->get_spool_state() == AP_Motors::SpoolState::GROUND_IDLE) {
+        copter.arming.disarm(AP_Arming::Method::LANDED);
+    }
+
+    // // if not armed set throttle to zero and exit immediately
+    // if (is_disarmed_or_landed()) {
+    //     make_safe_ground_handling();
+    //     return;
+    // }
+
+    // // set motors to full range
+    // motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+
+    // // run normal landing or precision landing (if enabled)
+    // land_run_normal_or_precland();
+        // Land State Machine Determination
+    if (is_disarmed_or_landed()) {
+        make_safe_ground_handling();
+    } else {
+        // set motors to full range
+        motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+
+        // pause before beginning land descent(等待10s后下降)
+        if (land_pause && millis()-land_start_time >= 10000) {
+            land_pause = false;
+            gcs().send_text(MAV_SEVERITY_INFO, "real land");
+
+        }
+
+        // run normal landing or precision landing (if enabled)
+        land_run_normal_or_precland(land_pause);
+    }
+}
+
+// void ModeDrawStar::takeoff_start()
+// {
+//     // initialise yaw
+//     auto_yaw.set_mode(AutoYaw::Mode::HOLD);
+
+//     // clear i term when we're taking off
+//     pos_control->init_z_controller();
+    
+//     set_submode(SubMode::TAKEOFF);
+// }
 
 #endif
