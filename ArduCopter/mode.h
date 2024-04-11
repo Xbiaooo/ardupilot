@@ -1114,7 +1114,11 @@ public:
     bool has_manual_throttle() const override { return false; }  // 此模式不允许手动控制油门
     bool allows_arming(AP_Arming::Method method) const override { return true; }  // 允许在此模式下解锁
     bool is_autopilot() const override { return true; } // 此模式为自动飞行控制
+    
+    // return true if this flight mode supports user takeoff
+    //  must_nagivate is true if mode must also control horizontal position  
     bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下用户控制起飞
+    
     bool in_guided_mode() const override { return _mode == SubMode::DRAW5STAR; } // 此模式是一种引导的模式
 
     // DrawStar modes 子模式
@@ -1128,39 +1132,35 @@ public:
     // set submode.
     void set_submode(SubMode new_submode);
 
-    // void takeoff_start();
-    // bool draw5star_start();
-    // void land_start();
-
-    // bool is_landing() const override;
-    // bool is_taking_off() const override;
-
-    // bool set_speed_xy(float speed_xy_cms) override;
-    // bool set_speed_up(float speed_up_cms) override;
-    // bool set_speed_down(float speed_down_cms) override;
-
 protected:
 
     const char *name() const override { return "DRAW_STAR"; }
     const char *name4() const override { return "STAR"; }
 
 private:
-    Vector3f path[10];  //航点数组
-    int path_num;   //当前航点号
 
-    void generate_path();   //生成航线
-    void pos_control_start();   //开始位置控制
-    void pos_control_run();     //位置控制周期调用函数
-
-    //void takeoff_run();
+    void takeoff_run();
     void draw5star_run();
     void land_run();
 
+    //takeoff的参数
+    bool takeoff_flag = 0; //是否完成了takeoff_start()操作（0未完成；1已完成）
+    //void takeoff_start();
+    float target_alt_cm = 2000.0;   //起飞的目标高度
+
+    //draw5star的参数
+    Vector3f path[10];  //航点数组
+    int path_num;   //当前航点号
+    void generate_path();   //生成航线
+    bool draw5star_flag = 0; //是否完成了takeoff_start()操作（0未完成；1已完成）
+    void draw5star_start();
+    
     //land的参数
     uint32_t land_start_time;
     bool land_pause = true;
 
-    SubMode _mode = SubMode::DRAW5STAR;
+    SubMode _mode = SubMode::TAKEOFF;
+    //SubMode _mode = SubMode::DRAW5STAR;     //当前子模式
 
 };
 

@@ -25,6 +25,8 @@ bool ModeAuto::init(bool ignore_checks)
     auto_RTL = false;
     if (mission.num_commands() > 1 || ignore_checks) {
         // reject switching to auto mode if landed with motors armed but first command is not a takeoff (reduce chance of flips)
+        // 拒绝切换到自动模式——如果UAV着陆时解锁但第一条命令不是起飞（减少翻转的可能）
+        
         if (motors->armed() && copter.ap.land_complete && !mission.starts_with_takeoff_cmd()) {
             gcs().send_text(MAV_SEVERITY_CRITICAL, "Auto: Missing Takeoff Cmd");
             return false;

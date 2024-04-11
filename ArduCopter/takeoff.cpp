@@ -54,6 +54,7 @@ bool Mode::do_user_takeoff(float takeoff_alt_cm, bool must_navigate)
 }
 
 // start takeoff to specified altitude above home in centimeters
+// 起飞到指定高度，以厘米为单位
 void Mode::_TakeOff::start(float alt_cm)
 {
     // initialise takeoff state
@@ -141,11 +142,13 @@ void Mode::auto_takeoff_run()
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
     // aircraft stays in landed state until rotor speed run up has finished
+    // 飞机保持落地状态，直至电机转速上升完成
     if (motors->get_spool_state() != AP_Motors::SpoolState::THROTTLE_UNLIMITED) {
         // motors have not completed spool up yet so relax navigation and position controllers
+        // 电机还未完成加速，所以放松导航和位置控制器
         pos_control->relax_velocity_controller_xy();
         pos_control->update_xy_controller();
-        pos_control->relax_z_controller(0.0f);   // forces throttle output to decay to zero
+        pos_control->relax_z_controller(0.0f);   // forces throttle output to decay to zero  强制油门输出衰减为0
         pos_control->update_z_controller();
         attitude_control->reset_yaw_target_and_rate();
         attitude_control->reset_rate_controller_I_terms();
@@ -156,8 +159,10 @@ void Mode::auto_takeoff_run()
     }
     
     // aircraft stays in landed state until vertical movement is detected or 90% throttle is reached
-    if (copter.ap.land_complete) {
+    // 飞机保持落地状态，直至检测到垂直运动或者达到90%油门
+    if (copter.ap.land_complete) {      //如果飞机是落地状态，那么执行下端程序
         // send throttle to attitude controller with angle boost
+        // 将带增加角度的油门传递给姿态控制器 （不理解）
         float throttle = constrain_float(copter.attitude_control->get_throttle_in() + copter.G_Dt / copter.g2.takeoff_throttle_slew_time, 0.0, 1.0);
         copter.attitude_control->set_throttle_out(throttle, true, 0.0);
         // tell position controller to reset alt target and reset I terms
@@ -180,6 +185,7 @@ void Mode::auto_takeoff_run()
     }
 
     // check if we are not navigating because of low altitude
+    // 检查是否由于低空而导致没有导航
     if (auto_takeoff_no_nav_active) {
         // check if vehicle has reached no_nav_alt threshold
         if (inertial_nav.get_position_z_up_cm() >= auto_takeoff_no_nav_alt_cm) {
@@ -194,18 +200,22 @@ void Mode::auto_takeoff_run()
     pos_control->update_xy_controller();
 
     // command the aircraft to the take off altitude
+    // 命令飞机到起飞高度
     float pos_z = auto_takeoff_complete_alt_cm + terr_offset;
     float vel_z = 0.0;
     copter.pos_control->input_pos_vel_accel_z(pos_z, vel_z, 0.0);
     
     // run the vertical position controller and set output throttle
+    // 运行垂直位置控制器，设置输出油门
     pos_control->update_z_controller();
 
     // call attitude controller with auto yaw
+    // 调用姿态控制器中的自动偏航角（auto yaw）也许是这样翻译。。。
     attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
 
     // takeoff complete when we are less than 1% of the stopping distance from the target altitude
     // and 10% our maximum climb rate
+    // 起飞结束标志（两项均要满足）：1、当前和目标高度之间的距离小于初始时的1%；2、当前爬升速度小于最大爬升速度的10%
     const float vel_threshold_fraction = 0.1;
     // stopping distance from vel_threshold_fraction * max velocity
     const float stop_distance = 0.5 * sq(vel_threshold_fraction * copter.pos_control->get_max_speed_up_cms()) / copter.pos_control->get_max_accel_z_cmss();
