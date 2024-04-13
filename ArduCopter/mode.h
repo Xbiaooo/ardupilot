@@ -1146,7 +1146,7 @@ private:
     //takeoff的参数
     bool takeoff_flag = 0; //是否完成了takeoff_start()操作（0未完成；1已完成）
     //void takeoff_start();
-    float target_alt_cm = 2000.0;   //起飞的目标高度
+    float target_alt_cm = 1000.0;   //起飞的目标高度
 
     //draw5star的参数
     Vector3f path[10];  //航点数组
