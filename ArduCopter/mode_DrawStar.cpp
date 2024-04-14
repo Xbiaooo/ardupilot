@@ -17,6 +17,8 @@ bool ModeDrawStar::init(bool ignore_checks)
     takeoff_flag = 0;
     draw5star_flag = 0;
     land_pause = true;
+
+    takeoff_finish = true;
      
     //_mode = SubMode::DRAW5STAR;
 
@@ -111,11 +113,17 @@ void ModeDrawStar::takeoff_run()
     auto_takeoff_start(1000, false);
     copter.set_auto_armed(true);
     auto_takeoff_run(); 
-    if(auto_takeoff_complete)
+    if(auto_takeoff_complete && takeoff_finish)
+    {
+        takeoff_finish = false;
+        takeoff_finish_time = millis();
+        gcs().send_text(MAV_SEVERITY_INFO, "takeoff finished,wait 5 seconds");
+    }
+    if(auto_takeoff_complete && millis()-takeoff_finish_time >= 5000 )
     {
         //draw5star_flag = 0;
         set_submode(SubMode::DRAW5STAR);
-        gcs().send_text(MAV_SEVERITY_INFO, "takeoff finished, now go into draw5star submode");
+        gcs().send_text(MAV_SEVERITY_INFO, "now go into draw5star submode");
     }
     
     
@@ -194,7 +202,7 @@ void ModeDrawStar::draw5star_run()
             }
         } else if ((path_num == 6) && wp_nav->reached_wp_destination()) 
         {  // 五角星航线运行完成，自动进入Loiter模式
-            gcs().send_text(MAV_SEVERITY_INFO, "Draw star finished, now go into land submode");
+            gcs().send_text(MAV_SEVERITY_INFO, "Draw star finished, wait 5 seconds");
             //copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_END);  // 切换到loiter模式
             draw5star_flag = 0;
             set_submode(SubMode::LAND);
@@ -243,7 +251,7 @@ void ModeDrawStar::land_run()
         // 在开始下降之前暂停一下(等待5s后下降)
         if (land_pause && millis()-land_start_time >= 5000) {
             land_pause = false;
-            gcs().send_text(MAV_SEVERITY_INFO, "real land");
+            gcs().send_text(MAV_SEVERITY_INFO, "now go into land submode");
 
         }
 
