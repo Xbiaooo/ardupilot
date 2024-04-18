@@ -816,24 +816,28 @@ void Copter::update_OpenMV()
         if(flightmode->mode_number() != Mode::Number::GUIDED)
             return;
 
+        //像素坐标系到机体坐标系。OpenMV固定在机体正前方
+        //机体坐标系x轴向前、y轴向右、z轴向下
         int16_t target_body_frame_y = (int16_t)openmv.cx - 80;  // QQVGA 160 * 120
         int16_t target_body_frame_z = (int16_t)openmv.cy - 60;
 
         float angle_y_deg = target_body_frame_y * 60.0f / 160.0f;
         float angle_z_deg = target_body_frame_z * 60.0f / 120.0f;
 
-        Vector3f v = Vector3f(1.0f, tanf(radians(angle_y_deg)), tanf(radians(angle_z_deg)));
-        v = v / v.length();
+        Vector3f v = Vector3f(1.0f, tanf(radians(angle_y_deg)), tanf(radians(angle_z_deg)));    //目标在机体坐标系中的位置（假设x轴距离为1）
+        v = v / v.length(); //归一化
 
+        //机体坐标系旋转为NED坐标系(将目标在机体坐标系中的位置转化为在NED坐标系中的位置)
+        //目的是为了抵消一些误差，比如：飞机检测到目标在图象在中上方，但是当飞机斜向上朝目标飞行时，目标在图像中的位置可能又会出现在中下方（实际上仍在斜上方），造成误差
         const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
         v = rotMat * v;
 
-        target = v * 10000.0f;  // distance 100m
+        target = v * 10000.0f;  // distance 100m （假设目标与机体间的直线距离为100m）
 
         target.z = -target.z;  // ned to neu
 
         Vector3f current_pos = inertial_nav.get_position_neu_cm();
-        target = target + current_pos;
+        target = target + current_pos;  //转换为相对于EKF origin(EKF原点)的NEU坐标系下的坐标 
 
         if(millis() - last_set_pos_target_time_ms > 500) {  // call in 2Hz
             // wp_nav->set_wp_destination(target, false);
