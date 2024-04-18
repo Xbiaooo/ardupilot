@@ -205,9 +205,9 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// DrawStar mode - 五角星航线模式
-#ifndef MODE_DRAWSTAR_ENABLED
-# define MODE_DRAWSTAR_ENABLED ENABLED
+// AutoTrack mode - 巡航跟踪模式
+#ifndef MODE_AUTOTRACK_ENABLED
+# define MODE_AUTOTRACK_ENABLED ENABLED
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

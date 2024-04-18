@@ -1161,12 +1161,12 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // ID 62 is reserved for the SHOW_... parameters from the Skybrush fork at
     // https://github.com/skybrush-io/ardupilot
 
-    // @Param: SRAT_R_CM
-    // @DisplayName: star radius cm
-    // @Description: 五角星航线中五角星的大小
+    // @Param: AB_distance
+    // @DisplayName: AB_distance
+    // @Description: 巡航中两航点之间的距离
     // @Units: cm
     // @User: Advanced
-    AP_GROUPINFO("STAR_R_CM", 63, ParametersG2, star_radius_cm, 200.0f),
+    AP_GROUPINFO("AB_distance", 63, ParametersG2, AB_distance, 1000.0f),
 
 
     AP_GROUPEND

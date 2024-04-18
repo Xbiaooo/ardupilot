@@ -693,7 +693,7 @@ public:
     AP_Float pldp_delay_s;
     AP_Float pldp_descent_speed_ms;
 
-    AP_Float star_radius_cm;    //五角星大小，单位cm
+    AP_Float AB_distance;    //巡航中两航点A、B之间的距离，单位：cm
     
 };
 

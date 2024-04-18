@@ -39,7 +39,7 @@ public:
         AUTOROTATE =   26,  // Autonomous autorotation
         AUTO_RTL =     27,  // Auto RTL, this is not a true mode, AUTO will report as this mode if entered to perform a DO_LAND_START Landing sequence
         TURTLE =       28,  // Flip over after crash
-        DRAWSTAR =     29,  //五角星航线模式
+        AUTOTRACK =    29,  //巡航跟踪模式
 
         // Mode number 127 reserved for the "drone show mode" in the Skybrush
         // fork at https://github.com/skybrush-io/ardupilot
@@ -1100,12 +1100,14 @@ private:
     bool _paused;
 };
 
-class ModeDrawStar : public Mode {
+// 在A、B两点之间巡航，A点起飞，到达B点，共计三个来回。
+// ————期间如果没有检测到目标，则返回至A点后降落、上锁
+class ModeAutoTrack : public Mode {
 
 public:
     // inherit constructor
     using Mode::Mode;   
-    Number mode_number() const override { return Number::DRAWSTAR; }
+    Number mode_number() const override { return Number::AUTOTRACK; }
 
     bool init(bool ignore_checks) override;
     void run() override; 
@@ -1119,13 +1121,13 @@ public:
     //  must_nagivate is true if mode must also control horizontal position  
     bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下用户控制起飞
     
-    bool in_guided_mode() const override { return _mode == SubMode::DRAW5STAR; } // 此模式是一种引导的模式
+    bool in_guided_mode() const override { return _mode == SubMode::AB_cruise; } // 此模式是一种引导的模式
 
     // DrawStar modes 子模式
     //整个过程分为起飞、画五角星 、降落3个模式
     enum class SubMode : uint8_t {
         TAKEOFF,
-        DRAW5STAR,
+        AB_cruise,
         LAND,
     };
 
@@ -1134,35 +1136,44 @@ public:
 
 protected:
 
-    const char *name() const override { return "DRAW_STAR"; }
-    const char *name4() const override { return "STAR"; }
+    const char *name() const override { return "AUTO_TRACK"; }
+    const char *name4() const override { return "TRACK"; }
 
 private:
 
     void takeoff_run();
-    void draw5star_run();
+    void cruise_run();
     void land_run();
 
     //takeoff的参数
-    bool takeoff_flag = 0; //是否完成了takeoff_start()操作（0未完成；1已完成）
-    //void takeoff_start();
-    float target_alt_cm = 1000.0;   //起飞的目标高度
+    float target_alt_cm = 500.0;   //起飞的目标高度
     bool takeoff_finish = true;
     uint32_t takeoff_finish_time;
 
-    //draw5star的参数
-    Vector3f path[10];  //航点数组
-    int path_num;   //当前航点号
-    void generate_path();   //生成航线
-    bool draw5star_flag = 0; //是否完成了takeoff_start()操作（0未完成；1已完成）
-    void draw5star_start();
+    //AB_cruise的参数
+    enum class Point : uint8_t {
+        A,
+        B,
+    };
+    //void set_cruise_point(Point target_point);
+    void set_cruise_point(Point next_point, uint16_t time_ms = 2000, bool need_delay = true);
+    Point target_point;
+    Vector3f point_A, point_B;  //两个航点A、B
+    int cruise_sum = 3;     //总共要进行几个来回的巡航
+    int cruise_count;   //当前为巡航的第几个来回
+    void generate_point();   //生成航点
+    //bool ready_set_next_cruise_point = false; //
+    bool cruise_flag = 0; //是否完成了cruise_start()操作（0未完成；1已完成）
+    void cruise_start();
+    //void delay_ms(uint8_t time_ms); //到达一个航点后进行一段时间的延时
+    uint32_t point_reach_time;
+    bool point_pause;
     
     //land的参数
-    uint32_t land_start_time;
+    uint32_t cruise_finish_time;
     bool land_pause = true;
 
     SubMode _mode = SubMode::TAKEOFF;
-    //SubMode _mode = SubMode::DRAW5STAR;     //当前子模式
 
 };
 
