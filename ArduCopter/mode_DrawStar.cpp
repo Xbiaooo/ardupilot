@@ -1,6 +1,6 @@
 #include "Copter.h"
 
-#if MODE_GUIDED_ENABLED == ENABLED
+#if MODE_DRAWSTAR_ENABLED == ENABLED
 
 /*
  * 五角星航线模式初始化
