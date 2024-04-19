@@ -191,6 +191,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #endif
     SCHED_TASK_CLASS(AP_Notify,            &copter.notify,              update,          50,  90,  78),
     SCHED_TASK(one_hz_loop,            1,    100,  81),
+    SCHED_TASK(update_OpenMV,        400,    100,  82),
     SCHED_TASK(ekf_check,             10,     75,  84),
     SCHED_TASK(check_vibration,       10,     50,  87),
     SCHED_TASK(gpsglitch_check,       10,     50,  90),
@@ -643,7 +644,13 @@ void Copter::one_hz_loop()
 #endif
 
     AP_Notify::flags.flying = !ap.land_complete;
+
+        gcs().send_text(MAV_SEVERITY_CRITICAL,
+                    "OpenMV X:%d Y:%d",
+                    openmv.cx,
+                    openmv.cy);
 }
+
 
 void Copter::init_simple_bearing()
 {
@@ -773,6 +780,68 @@ bool Copter::get_rate_ef_targets(Vector3f& rate_ef_targets) const
         rate_ef_targets = attitude_control->get_rate_ef_targets();
     }
     return true;
+}
+
+void Copter::update_OpenMV()
+{
+    // simulation
+    bool sim_openmv_new_data = false;
+    static uint32_t last_sim_new_data_time_ms = 0;
+    if(flightmode->mode_number() != Mode::Number::GUIDED) {
+        last_sim_new_data_time_ms = millis();
+        openmv.cx = 80;
+        openmv.cy = 60;
+    } else if (millis()- last_sim_new_data_time_ms < 15000) {
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = 1;
+        openmv.cy = 1;
+    } else if (millis()- last_sim_new_data_time_ms < 30000) {
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = 160;
+        openmv.cy = 120;
+    } else {
+        sim_openmv_new_data = false;
+        openmv.cx = 80;
+        openmv.cy = 60;
+    }
+
+    // end of simulation code
+
+    static uint32_t last_set_pos_target_time_ms = 0;
+    Vector3f target = Vector3f(0, 0, 0);
+    if(openmv.update() || sim_openmv_new_data) {
+        Log_Write_OpenMV();
+
+        if(flightmode->mode_number() != Mode::Number::GUIDED)
+            return;
+
+        int16_t target_body_frame_y = (int16_t)openmv.cx - 80;  // QQVGA 160 * 120
+        int16_t target_body_frame_z = (int16_t)openmv.cy - 60;
+
+        float angle_y_deg = target_body_frame_y * 60.0f / 160.0f;
+        float angle_z_deg = target_body_frame_z * 60.0f / 120.0f;
+
+        Vector3f v = Vector3f(1.0f, tanf(radians(angle_y_deg)), tanf(radians(angle_z_deg)));
+        v = v / v.length();
+
+        const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+        v = rotMat * v;
+
+        target = v * 10000.0f;  // distance 100m
+
+        target.z = -target.z;  // ned to neu
+
+        Vector3f current_pos = inertial_nav.get_position_neu_cm();
+        target = target + current_pos;
+
+        if(millis() - last_set_pos_target_time_ms > 500) {  // call in 2Hz
+            // wp_nav->set_wp_destination(target, false);
+            mode_guided.set_destination(target, false, 0, true, 0, false);
+            last_set_pos_target_time_ms= millis();
+        }
+    }
 }
 
 /*

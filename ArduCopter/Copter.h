@@ -71,6 +71,7 @@
 #include <AP_Proximity/AP_Proximity.h>      // ArduPilot proximity sensor library
 #include <AP_OpticalFlow/AP_OpticalFlow.h>
 #include <AP_Winch/AP_Winch_config.h>
+#include <AP_Openmv/AP_OpenMV.h>
 
 // Configuration
 #include "defines.h"
@@ -248,6 +249,8 @@ private:
     RC_Channel *channel_yaw;
 
     AP_Logger logger;
+
+    AP_OpenMV openmv{};
 
     // flight modes convenience array
     AP_Int8 *flight_modes;
@@ -688,6 +691,7 @@ private:
     void twentyfive_hz_logging();
     void three_hz_loop();
     void one_hz_loop();
+    void update_OpenMV(void);
     void init_simple_bearing();
     void update_simple_mode(void);
     void update_super_simple_bearing(bool force_update);
@@ -823,6 +827,7 @@ private:
     void standby_update();
 
     // Log.cpp
+    void Log_Write_OpenMV();
     void Log_Write_Control_Tuning();
     void Log_Write_Attitude();
     void Log_Write_EKF_POS();
