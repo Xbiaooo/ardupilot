@@ -645,10 +645,10 @@ void Copter::one_hz_loop()
 
     AP_Notify::flags.flying = !ap.land_complete;
 
-        gcs().send_text(MAV_SEVERITY_CRITICAL,
-                    "OpenMV X:%d Y:%d",
-                    openmv.cx,
-                    openmv.cy);
+        // gcs().send_text(MAV_SEVERITY_CRITICAL,
+        //             "OpenMV X:%d Y:%d",
+        //             openmv.cx,
+        //             openmv.cy);
 }
 
 

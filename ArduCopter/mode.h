@@ -1587,12 +1587,16 @@ public:
     bool allows_autotune() const override { return true; }
     bool allows_flip() const override { return true; }
 
+    AP_OpenMV openmv{};
+
 protected:
 
     const char *name() const override { return "STABILIZE"; }
     const char *name4() const override { return "STAB"; }
 
 private:
+
+    void update_openmv();
 
 };
 

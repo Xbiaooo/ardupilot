@@ -4,5 +4,6 @@
     "files.associations": {
         "*.cpp": "cpp",
         "chrono": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "D:/ardupilot/libraries/AP_HAL_ESP32/targets/esp-idf"
 }

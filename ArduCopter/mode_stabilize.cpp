@@ -8,6 +8,7 @@
 // should be called at 100hz or more
 void ModeStabilize::run()
 {
+    update_openmv();
     // apply simple mode transform to pilot inputs
     update_simple_mode();
 
@@ -67,4 +68,26 @@ void ModeStabilize::run()
 
     // output pilot's throttle
     attitude_control->set_throttle_out(pilot_desired_throttle, true, g.throttle_filt);
+}
+
+void ModeStabilize::update_openmv()
+{
+    static uint32_t last_set_pos_target_time_ms = 0;
+
+    if (openmv.update())
+    {
+        // gcs().send_text(MAV_SEVERITY_INFO,
+        //             "OpenMV X:%d Y:%d",
+        //             openmv.cx,
+        //             openmv.cy);
+        if(millis() - last_set_pos_target_time_ms > 500) {  // call in 2Hz
+            last_set_pos_target_time_ms= millis();
+                gcs().send_text(MAV_SEVERITY_INFO,
+                    "OpenMV X:%d Y:%d",
+                    openmv.cx,
+                    openmv.cy);    
+        }
+
+    }
+    
 }
