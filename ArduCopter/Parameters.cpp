@@ -1166,7 +1166,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Description: 巡航中两航点之间的距离
     // @Units: cm
     // @User: Advanced
-    AP_GROUPINFO("AB_distance", 63, ParametersG2, AB_distance, 1000.0f),
+    AP_GROUPINFO("AB_distance", 63, ParametersG2, AB_distance, 300.0f),
 
 
     AP_GROUPEND

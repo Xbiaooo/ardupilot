@@ -17,7 +17,7 @@ AP_OpenMV::AP_OpenMV(void)
 // init - perform require initialisation including detecting which protocol to use
 void AP_OpenMV::init(const AP_SerialManager& serial_manager)
 {
-    // check for DEVO_DPort
+    // check for Openmv_Port
     if ((_port = serial_manager.find_serial(AP_SerialManager::SerialProtocol_OPEN_MV, 0))) {    //查找飞控上的串口里是否有连接OpenMV的
         _port->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);      //关闭流控制
         // initialise uart

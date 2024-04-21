@@ -33,8 +33,15 @@ public:
     // update flight control mode. The control mode is vehicle type specific
     bool update(void);
 
+    //目标中心点在图像坐标系中的坐标，及目标距无人机当前的距离
     uint8_t cx;
     uint8_t cy;
+    //uint8_t distance;
+
+    //openmv焦距
+    float focal_length = 2.8e-3f;
+    //openmv一个像素点的宽度（openmv视角：HFOV=70.8° VFOV=55.6°）
+    float px_length = focal_length * (tanf(35.4f)/80 + tanf(27.8f)/60)/2;
 
     uint32_t last_frame_ms;
 
@@ -43,8 +50,10 @@ private:
 
     uint8_t _step;
 
+    //暂存串口发送过来的cx、cy和distance数据
     uint8_t _cx_temp;
     uint8_t _cy_temp;
+    uint8_t _distance_temp;
 };
 
 

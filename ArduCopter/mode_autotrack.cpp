@@ -1,10 +1,6 @@
 #include "Copter.h"
 
-#if MODE_GUIDED_ENABLED == ENABLED
-
-/*
- * 五角星航线模式初始化
- */
+#if MODE_AUTOTRACK_ENABLED == ENABLED
 
 
 //模式初始化
@@ -14,13 +10,10 @@ bool ModeAutoTrack::init(bool ignore_checks)
 
     wp_nav->wp_and_spline_init();
     
-    //takeoff_flag = 0;
     cruise_flag = 0;
     land_pause = true;
 
     takeoff_finish = true;
-     
-    //_mode = SubMode::DRAW5STAR;
 
     return true;
 }
@@ -34,8 +27,20 @@ void ModeAutoTrack::run()
         takeoff_run();
         break;
 
-    case SubMode::AB_cruise:
-        cruise_run();
+    case SubMode::AB_CRUISE:
+        if (openmv.update())    //当openmv识别到目标，有信息传递过来时，切换为跟踪模式
+        {
+            set_submode(SubMode::TRACK);
+            target = inertial_nav.get_position_neu_cm();
+        }
+        else
+        {
+            cruise_run();
+        }
+        break;
+
+    case SubMode::TRACK:
+        track_run();
         break;
 
     case SubMode::LAND:
@@ -59,7 +64,9 @@ void ModeAutoTrack::set_submode(SubMode new_submode)
     
 }
 
-//————开始起飞
+////////////////////////////////////////////////////////////
+// takeoff 函数
+// ————开始起飞
 void ModeAutoTrack::takeoff_run()
 {   
     copter.set_auto_armed(true);
@@ -73,8 +80,7 @@ void ModeAutoTrack::takeoff_run()
     }
     if(auto_takeoff_complete && millis()-takeoff_finish_time >= 5000 )
     {
-        //draw5star_flag = 0;
-        set_submode(SubMode::AB_cruise);
+        set_submode(SubMode::AB_CRUISE);
         gcs().send_text(MAV_SEVERITY_INFO, "now go into draw5star submode");
     }
     
@@ -82,6 +88,8 @@ void ModeAutoTrack::takeoff_run()
 
 }
 
+////////////////////////////////////////////////////////////
+// cruise 函数
 //————巡航初始化
 void ModeAutoTrack::cruise_start()
 {
@@ -113,8 +121,7 @@ void ModeAutoTrack::generate_point()
     point_B = point_A + Vector3f(1.0f, 0, 0) * radius_cm;
 }
 
-//设置下一个航点
-// void ModeAutoTrack::set_cruise_point(Point next_point, uint16_t time_ms = 2000, bool ready_set_next_cruise_point = false)
+//设置下一个巡航航点
 void ModeAutoTrack::set_cruise_point(Point next_point, uint16_t time_ms, bool need_delay)
 {
     if (!need_delay) //如果不需要延时(起始时从A点出发不需要延时)
@@ -149,8 +156,6 @@ void ModeAutoTrack::set_cruise_point(Point next_point, uint16_t time_ms, bool ne
     
 }    
 
-// }
-
 //————开始巡航
 void ModeAutoTrack::cruise_run()
 {
@@ -161,9 +166,9 @@ void ModeAutoTrack::cruise_run()
     }
     else
     {
-        	gcs().send_text(MAV_SEVERITY_INFO, 
-                "count: %d",
-                 cruise_count);
+        	// gcs().send_text(MAV_SEVERITY_INFO, 
+            //     "count: %d",
+            //      cruise_count);
 
         if (cruise_count < cruise_sum)
         {
@@ -224,29 +229,128 @@ void ModeAutoTrack::cruise_run()
                 
         }
 
-        // if not armed set throttle to zero and exit immediately
-        if (is_disarmed_or_landed()) {
-            // do not spool down tradheli when on the ground with motor interlock enabled
-            make_safe_ground_handling(copter.is_tradheli() && motors->get_interlock());
-            return;
-        }
+        pos_control_run();
+        
+        // // if not armed set throttle to zero and exit immediately
+        // if (is_disarmed_or_landed()) {
+        //     // do not spool down tradheli when on the ground with motor interlock enabled
+        //     make_safe_ground_handling(copter.is_tradheli() && motors->get_interlock());
+        //     return;
+        // }
 
-        // set motors to full range
-        motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+        // // set motors to full range
+        // motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-        // run waypoint controller
-        copter.failsafe_terrain_set_status(wp_nav->update_wpnav());
+        // // run waypoint controller
+        // copter.failsafe_terrain_set_status(wp_nav->update_wpnav());
 
-        // call z-axis position controller (wpnav should have already updated it's alt target)
-        pos_control->update_z_controller();
+        // // call z-axis position controller (wpnav should have already updated it's alt target)
+        // pos_control->update_z_controller();
 
-        // call attitude controller with auto yaw
-        attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
+        // // call attitude controller with auto yaw
+        // attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
     }
     
     
 }
 
+//位置控制器，由cruise和track共用
+void ModeAutoTrack::pos_control_run()
+{
+    // if not armed set throttle to zero and exit immediately
+    if (is_disarmed_or_landed()) {
+        // do not spool down tradheli when on the ground with motor interlock enabled
+        make_safe_ground_handling(copter.is_tradheli() && motors->get_interlock());
+        return;
+    }
+
+    // set motors to full range
+    motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+
+    // run waypoint controller
+    copter.failsafe_terrain_set_status(wp_nav->update_wpnav());
+
+    // call z-axis position controller (wpnav should have already updated it's alt target)
+    pos_control->update_z_controller();
+
+    // call attitude controller with auto yaw
+    attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
+}
+
+////////////////////////////////////////////////////////////
+// track 函数
+//————开始跟踪
+void ModeAutoTrack::track_run()
+{
+    // static Vector3f targ;
+    static uint32_t last_set_pos_target_time_ms = 0;
+
+    if(openmv.update())
+    {       
+        //将像素坐标系转换为图像坐标系
+        //像素坐标系-->图像坐标系
+        int16_t image_frame_x = (int16_t)openmv.cx - 80;
+        int16_t image_frame_y = (int16_t)openmv.cy - 60;
+
+        //图像坐标系(2D)-->相机坐标系(3D)
+        //相机坐标系：以相机光心为原点，前为z轴、右为x轴、下为y轴
+        //由于openmv固定在无人机正下方，且跟踪时无人机高度不变，即机体坐标系中z轴不变，
+            //所以只需将图像坐标系转化为相机坐标系中的x轴和y轴即可
+        //利用相似三角形计算目标中心点在相机坐标系中相对原点在x轴和y轴的偏移
+        float altitude =  copter.flightmode->get_alt_above_ground_cm() * 10.0f; //altitude实际上即为目标在相机坐标系中的z轴坐标
+        float camera_frame_x = image_frame_x * openmv.px_length * altitude / openmv.focal_length;
+        float camera_frame_y = image_frame_y * openmv.px_length * altitude / openmv.focal_length;
+
+        Vector3f v = Vector3f(camera_frame_x, camera_frame_y, altitude);
+
+        //相机坐标系-->机体坐标系
+        const Matrix3f rotMat1 = Matrix3f(Vector3f(0, -1, 0), //旋转矩阵
+                                          Vector3f(1, 0, 0),
+                                          Vector3f(0, 0, 0)); //同时将z轴坐标变为0
+        v = rotMat1 * v;         
+
+        //机体坐标系-->NED坐标系  
+        const Matrix3f &rotMat2 = copter.ahrs.get_rotation_body_to_ned();        
+        v = rotMat2 * v;
+
+        //NED坐标系-->NEU坐标系
+        v.z = -v.z; //但由于z轴坐标为0，所以此处并无变化
+
+        //获取机体当前坐标(相对于EKF原点)
+        Vector3f current_pos = inertial_nav.get_position_neu_cm();
+
+        //目标位置坐标(相对于EKF原点)
+        target = current_pos + v;
+        //首次更新目标位置
+        if (last_set_pos_target_time_ms == 0)
+        {
+            wp_nav->set_wp_destination(target, false);
+            last_set_pos_target_time_ms= millis();
+        }   
+
+        if(millis() - last_set_pos_target_time_ms > 500) // call in 2Hz
+        {  
+            wp_nav->set_wp_destination(target, false);
+            last_set_pos_target_time_ms= millis();
+        }
+    }
+    else
+    {
+         wp_nav->set_wp_destination(target, false);
+         //视野中失去目标5s后，原地降落
+         if (millis() - last_set_pos_target_time_ms > 5000)
+         {
+            set_submode(SubMode::LAND);
+            cruise_finish_time = millis();
+         }
+         
+    }
+    pos_control_run();
+    
+}
+
+////////////////////////////////////////////////////////////
+// land 函数
 //————开始降落
 void ModeAutoTrack::land_run()
 {
@@ -272,6 +376,7 @@ void ModeAutoTrack::land_run()
 
         // 进行正常的下降（10m之上1.5m/s；10米以内0.5m/s）
         land_run_normal_or_precland(land_pause);
+        
     }
 }
 

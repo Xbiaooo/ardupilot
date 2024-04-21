@@ -1102,6 +1102,7 @@ private:
 
 // 在A、B两点之间巡航，A点起飞，到达B点，共计三个来回。
 // ————期间如果没有检测到目标，则返回至A点后降落、上锁
+// ————默认要检测的目标紧贴地面（这样可以把无人机的高度简略认为是openmv和目标之间的距离）
 class ModeAutoTrack : public Mode {
 
 public:
@@ -1121,13 +1122,14 @@ public:
     //  must_nagivate is true if mode must also control horizontal position  
     bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下用户控制起飞
     
-    bool in_guided_mode() const override { return _mode == SubMode::AB_cruise; } // 此模式是一种引导的模式
+    bool in_guided_mode() const override { return _mode == SubMode::AB_CRUISE; } // 此模式是一种引导的模式
 
-    // DrawStar modes 子模式
-    //整个过程分为起飞、画五角星 、降落3个模式
+    // 子模式
+    // 整个过程分为起飞、巡航、跟踪、降落4个子模式
     enum class SubMode : uint8_t {
         TAKEOFF,
-        AB_cruise,
+        AB_CRUISE,
+        TRACK,
         LAND,
     };
 
@@ -1141,34 +1143,41 @@ protected:
 
 private:
 
+    AP_OpenMV openmv{};
+    //void update_OpenMV(void);
+    
     void takeoff_run();
     void cruise_run();
+    void track_run();
     void land_run();
 
+    void pos_control_run(); //cruise和track共用
+
     //takeoff的参数
-    float target_alt_cm = 500.0;   //起飞的目标高度
+    float target_alt_cm = 200.0;   //起飞的目标高度
     bool takeoff_finish = true;
     uint32_t takeoff_finish_time;
 
-    //AB_cruise的参数
+    //cruise的参数
     enum class Point : uint8_t {
         A,
         B,
     };
-    //void set_cruise_point(Point target_point);
+
     void set_cruise_point(Point next_point, uint16_t time_ms = 2000, bool need_delay = true);
     Point target_point;
     Vector3f point_A, point_B;  //两个航点A、B
     int cruise_sum = 3;     //总共要进行几个来回的巡航
     int cruise_count;   //当前为巡航的第几个来回
     void generate_point();   //生成航点
-    //bool ready_set_next_cruise_point = false; //
     bool cruise_flag = 0; //是否完成了cruise_start()操作（0未完成；1已完成）
     void cruise_start();
-    //void delay_ms(uint8_t time_ms); //到达一个航点后进行一段时间的延时
     uint32_t point_reach_time;
     bool point_pause;
     
+    //track的参数
+    Vector3f target;  //跟踪的目标位置
+
     //land的参数
     uint32_t cruise_finish_time;
     bool land_pause = true;
