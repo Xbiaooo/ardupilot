@@ -12,6 +12,7 @@ AP_OpenMV::AP_OpenMV(void)
 {
     _port = NULL;   //默认OpenMV串口为空
     _step = 0;      //默认解析帧的步骤为0
+    _singleton = this;
 }
 
 // init - perform require initialisation including detecting which protocol to use
@@ -29,7 +30,11 @@ void AP_OpenMV::init(const AP_SerialManager& serial_manager)
 bool AP_OpenMV::update()
 {
     if(_port == NULL)
+    {
+        flag = 0;
         return false;
+    }
+    flag = 1;    
 
     int16_t numc = _port->available();  //读取的字节数
     uint8_t data;
@@ -78,4 +83,15 @@ bool AP_OpenMV::update()
     }
 
     return false;
+}
+
+AP_OpenMV *AP_OpenMV::_singleton;
+
+namespace AP {
+
+AP_OpenMV *openmv()
+{
+    return AP_OpenMV::get_singleton();
+}
+
 }

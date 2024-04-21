@@ -74,20 +74,22 @@ void ModeStabilize::update_openmv()
 {
     static uint32_t last_set_pos_target_time_ms = 0;
 
-    if (openmv.update())
-    {
-        // gcs().send_text(MAV_SEVERITY_INFO,
-        //             "OpenMV X:%d Y:%d",
-        //             openmv.cx,
-        //             openmv.cy);
-        if(millis() - last_set_pos_target_time_ms > 500) {  // call in 2Hz
-            last_set_pos_target_time_ms= millis();
-                gcs().send_text(MAV_SEVERITY_INFO,
-                    "OpenMV X:%d Y:%d",
-                    openmv.cx,
-                    openmv.cy);    
-        }
+    bool a = openmv.update();
+    gcs().send_text(MAV_SEVERITY_INFO,"%d", openmv.flag);
+    // if (openmv.update())
+    // {
+    //     // gcs().send_text(MAV_SEVERITY_INFO,
+    //     //             "OpenMV X:%d Y:%d",
+    //     //             openmv.cx,
+    //     //             openmv.cy);
+    //     if(millis() - last_set_pos_target_time_ms > 500) {  // call in 2Hz
+    //         last_set_pos_target_time_ms= millis();
+    //             gcs().send_text(MAV_SEVERITY_INFO,
+    //                 "OpenMV X:%d Y:%d",
+    //                 openmv.cx,
+    //                 openmv.cy);    
+    //     }
 
-    }
+    // }
     
 }

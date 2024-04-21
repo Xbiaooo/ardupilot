@@ -14,7 +14,10 @@
 */
 #pragma once
 
+
+
 #include <AP_HAL/AP_HAL.h>
+
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_SerialManager/AP_SerialManager.h>
 
@@ -24,8 +27,9 @@ public:
     AP_OpenMV();
 
     /* Do not allow copies */
-    AP_OpenMV(const AP_OpenMV &other) = delete;
-    AP_OpenMV &operator=(const AP_OpenMV&) = delete;
+    // AP_OpenMV(const AP_OpenMV &other) = delete;
+    // AP_OpenMV &operator=(const AP_OpenMV&) = delete;
+    CLASS_NO_COPY(AP_OpenMV);
 
     // init - perform require initialisation including detecting which protocol to use
     void init(const AP_SerialManager& serial_manager);
@@ -38,6 +42,9 @@ public:
 
     uint32_t last_frame_ms;
 
+    static AP_OpenMV *get_singleton() { return _singleton; }
+    int flag = 1;
+
 private:
     AP_HAL::UARTDriver *_port;              // UART used to send data to receiver
 
@@ -45,6 +52,12 @@ private:
 
     uint8_t _cx_temp;
     uint8_t _cy_temp;
+
+    static AP_OpenMV *_singleton;
+    
 };
 
+namespace AP {
+    AP_OpenMV *openmv();
+};
 
