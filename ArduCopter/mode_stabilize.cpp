@@ -72,10 +72,11 @@ void ModeStabilize::run()
 
 void ModeStabilize::update_openmv()
 {
-    static uint32_t last_set_pos_target_time_ms = 0;
+    //static uint32_t last_set_pos_target_time_ms = 0;
 
     bool a = openmv.update();
-    gcs().send_text(MAV_SEVERITY_INFO,"%d", openmv.flag);
+    gcs().send_text(MAV_SEVERITY_INFO,"port:%d", openmv.flag);
+    gcs().send_text(MAV_SEVERITY_INFO,"return:%d", int(a));
     // if (openmv.update())
     // {
     //     // gcs().send_text(MAV_SEVERITY_INFO,
