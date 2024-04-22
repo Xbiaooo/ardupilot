@@ -38,6 +38,8 @@ public:
 
     uint32_t last_frame_ms;
 
+    bool flag = 1;
+
 private:
     AP_HAL::UARTDriver *_port;              // UART used to send data to receiver
 
@@ -45,6 +47,8 @@ private:
 
     uint8_t _cx_temp;
     uint8_t _cy_temp;
+
+    
 };
 
 

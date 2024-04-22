@@ -28,8 +28,14 @@ void AP_OpenMV::init(const AP_SerialManager& serial_manager)
 
 bool AP_OpenMV::update()
 {
+    
     if(_port == NULL)
+    {
+        flag = 0;
         return false;
+    }
+    
+    flag = 1;
 
     int16_t numc = _port->available();  //读取的字节数
     uint8_t data;
