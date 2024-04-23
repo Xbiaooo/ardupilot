@@ -1,5 +1,14 @@
 {
     "cSpell.language": "en-GB",
     "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc",
-    "cmake.sourceDirectory": "D:/ardupilot/libraries/AP_HAL_ESP32/targets/esp-idf"
+    "cmake.sourceDirectory": "D:/ardupilot/libraries/AP_HAL_ESP32/targets/esp-idf",
+    "files.associations": {
+        "*.cpp": "cpp",
+        "*.tcc": "cpp",
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp"
+    }
 }
