@@ -33,8 +33,17 @@ public:
     // update flight control mode. The control mode is vehicle type specific
     bool update(void);
 
-    uint8_t cx;
-    uint8_t cy;
+    uint8_t cx_flag;//表示x轴正负(1表示正，-1表示负)
+    uint8_t cy_flag;//表示y轴正负
+
+    // uint8_t cx_int;
+    // uint8_t cx_dec;
+    // uint8_t cy_int;
+    // uint8_t cy_dec;
+    // uint8_t cz_int;
+    // uint8_t cz_dec;
+
+    float cx, cy, cz;
 
     uint32_t last_frame_ms;
 
@@ -43,8 +52,12 @@ private:
 
     uint8_t _step;
 
-    uint8_t _cx_temp;
-    uint8_t _cy_temp;
+    uint8_t cx_int_temp;
+    uint8_t cx_dec_temp;
+    uint8_t cy_int_temp;
+    uint8_t cy_dec_temp;
+    uint8_t cz_int_temp;
+    uint8_t cz_dec_temp;
 };
 
 

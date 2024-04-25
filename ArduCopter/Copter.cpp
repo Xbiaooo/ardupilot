@@ -646,7 +646,7 @@ void Copter::one_hz_loop()
     AP_Notify::flags.flying = !ap.land_complete;
 
     gcs().send_text(MAV_SEVERITY_CRITICAL,
-                    "OpenMV X:%d Y:%d",
+                    "OpenMV X:%.1f Y:%.1f",
                     openmv.cx,
                     openmv.cy);
 }
@@ -788,22 +788,50 @@ void Copter::update_OpenMV()
     static uint32_t last_sim_new_data_time_ms = 0;
     if(flightmode->mode_number() != Mode::Number::GUIDED) {
         last_sim_new_data_time_ms = millis();
-        openmv.cx = 80;
-        openmv.cy = 60;
-    } else if (millis()- last_sim_new_data_time_ms < 15000) {
+        openmv.cx = 0;
+        openmv.cy = 0;
+        openmv.cz = 2;
+    } else if (millis()- last_sim_new_data_time_ms < 10000) {
         sim_openmv_new_data = true;
         openmv.last_frame_ms = millis();
-        openmv.cx = 1;
-        openmv.cy = 1;
+        openmv.cx = 0.2;
+        openmv.cy = 0.4;
+        openmv.cz = 2;
+    } else if (millis()- last_sim_new_data_time_ms < 20000) {
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = 0;
+        openmv.cy = 0.4;
+        openmv.cz = 2;
     } else if (millis()- last_sim_new_data_time_ms < 30000) {
         sim_openmv_new_data = true;
         openmv.last_frame_ms = millis();
-        openmv.cx = 160;
-        openmv.cy = 120;
+        openmv.cx = -0.2;
+        openmv.cy = 0.4;
+        openmv.cz = 2;
+    } else if (millis()- last_sim_new_data_time_ms < 40000) {
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = -0.2;
+        openmv.cy = 0;
+        openmv.cz = 2;
+    } else if (millis()- last_sim_new_data_time_ms < 50000) {
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = -0.2;
+        openmv.cy = -0.4;
+        openmv.cz = 2;
+    } else if (millis()- last_sim_new_data_time_ms < 60000) {
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+        openmv.cx = 0.2;
+        openmv.cy = -0.4;
+        openmv.cz = 2;
     } else {
         sim_openmv_new_data = false;
-        openmv.cx = 80;
-        openmv.cy = 60;
+        openmv.cx = 0;
+        openmv.cy = 0;
+        openmv.cz = 2;
     }
 
     // end of simulation code
@@ -813,32 +841,47 @@ void Copter::update_OpenMV()
     if(openmv.update() || sim_openmv_new_data) {
         Log_Write_OpenMV();
 
-        if(flightmode->mode_number() != Mode::Number::GUIDED)
-            return;
+        //像素坐标系-->图像坐标系(openmv已完成)
 
-        int16_t target_body_frame_y = (int16_t)openmv.cx - 80;  // QQVGA 160 * 120
-        int16_t target_body_frame_z = (int16_t)openmv.cy - 60;
+        //图像坐标系(2D)-->相机坐标系(3D)（openmv已完成）
+        //相机坐标系：以相机光心为原点，前为z轴、右为x轴、下为y轴
+        //由于openmv固定在无人机正下方，且跟踪时无人机高度不变，即机体坐标系中z轴不变，
+            //所以只需将图像坐标系转化为相机坐标系中的x轴和y轴即可
+        //利用相似三角形计算目标中心点在相机坐标系中相对原点在x轴和y轴的偏移
 
-        float angle_y_deg = target_body_frame_y * 60.0f / 160.0f;
-        float angle_z_deg = target_body_frame_z * 60.0f / 120.0f;
+        Vector3f v = Vector3f(openmv.cx, openmv.cy, openmv.cz);
 
-        Vector3f v = Vector3f(1.0f, tanf(radians(angle_y_deg)), tanf(radians(angle_z_deg)));
-        v = v / v.length();
+        //相机坐标系-->机体坐标系
+        // const Matrix3f rotMat1 = Matrix3f(Vector3f(0.0f, 1.0f, 0.0f), //旋转矩阵
+        //                                   Vector3f(1.0f, 0.0f, 0.0f),
+        //                                   Vector3f(0.0f, 0.0f, 1.0f)); //同时将z轴坐标变为0
+        // v = rotMat1 * v;  
 
-        const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
-        v = rotMat * v;
+        v.x = openmv.cy;
+        v.y = openmv.cx;      
 
-        target = v * 10000.0f;  // distance 100m
+        //机体坐标系-->NED坐标系  
+        const Matrix3f &rotMat2 = copter.ahrs.get_rotation_body_to_ned();        
+        v = rotMat2 * v;
 
-        target.z = -target.z;  // ned to neu
+        //NED坐标系-->NEU坐标系
+        //v.z = -v.z; //但由于z轴坐标为0，所以此处并无变化
 
+        v.z = 0; //定高飞行，z轴变化量为0
+        v = v * 100.0f;
+
+        //获取机体当前坐标(相对于EKF原点)
         Vector3f current_pos = inertial_nav.get_position_neu_cm();
-        target = target + current_pos;
+
+        //目标位置坐标(相对于EKF原点)
+        target = current_pos + v;
 
         if(millis() - last_set_pos_target_time_ms > 500) {  // call in 2Hz
-            // wp_nav->set_wp_destination(target, false);
+            //wp_nav->set_wp_destination(target, false);
             mode_guided.set_destination(target, false, 0, true, 0, false);
             last_set_pos_target_time_ms= millis();
+            // gcs().send_text(MAV_SEVERITY_CRITICAL,"%.1f",v.z);
+            // gcs().send_text(MAV_SEVERITY_CRITICAL, "target X:%.1f Y:%.1f",target.x, target.y);
         }
     }
     

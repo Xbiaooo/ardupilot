@@ -104,8 +104,8 @@ struct PACKED log_Data_Int16t {
 struct PACKED log_OpenMV {
     LOG_PACKET_HEADER;
     uint64_t time_us;
-    uint8_t cx;
-    uint8_t cy;
+    float cx;
+    float cy;
 };
 
 // Write an OpenMV packet
@@ -490,7 +490,7 @@ const struct LogStructure Copter::log_structure[] = {
 // @Field: Value: Value
 
     { LOG_OPENMV_MSG, sizeof(log_OpenMV),
-    "OMV",   "QBB",   "TimeUS,cx,xy", "s--", "F--" },
+    "OMV",   "Qff",   "TimeUS,cx,xy", "s--", "F--" },
     { LOG_CONTROL_TUNING_MSG, sizeof(log_Control_Tuning),
       "CTUN", "Qffffffefffhh", "TimeUS,ThI,ABst,ThO,ThH,DAlt,Alt,BAlt,DSAlt,SAlt,TAlt,DCRt,CRt", "s----mmmmmmnn", "F----00B000BB" , true },
     { LOG_DATA_INT16_MSG, sizeof(log_Data_Int16t),         
