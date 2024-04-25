@@ -811,7 +811,7 @@ void Copter::update_OpenMV()
     static uint32_t last_set_pos_target_time_ms = 0;
     Vector3f target = Vector3f(0, 0, 0);
     if(openmv.update() || sim_openmv_new_data) {
-        Log_Write_OpenMV();
+        //Log_Write_OpenMV();
 
         if(flightmode->mode_number() != Mode::Number::GUIDED)
             return;
@@ -827,6 +827,7 @@ void Copter::update_OpenMV()
 
         const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
         v = rotMat * v;
+        v.z = 0;
 
         target = v * 10000.0f;  // distance 100m
 
