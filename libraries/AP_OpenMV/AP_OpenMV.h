@@ -33,8 +33,8 @@ public:
     // update flight control mode. The control mode is vehicle type specific
     bool update(void);
 
-    uint8_t cx_flag;//表示x轴正负(1表示正，-1表示负)
-    uint8_t cy_flag;//表示y轴正负
+    float cx_flag;//表示x轴正负(1表示正，-1表示负)
+    float cy_flag;//表示y轴正负
 
     // uint8_t cx_int;
     // uint8_t cx_dec;

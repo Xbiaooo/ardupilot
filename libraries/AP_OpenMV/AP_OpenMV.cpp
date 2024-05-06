@@ -54,12 +54,12 @@ bool AP_OpenMV::update()
         case 2:
             if (data == 0x00)  //x正负
             {
-                cx_flag = 1;
+                cx_flag = 1.0f;
                 _step = 3;
             }                       
             else if (data == 0xFF)
             {
-                cx_flag = -1;
+                cx_flag = -1.0f;
                 _step = 3;
             }                
             else
@@ -81,12 +81,12 @@ bool AP_OpenMV::update()
         case 5:
             if (data == 0x00)  //y正负
             {
-                cy_flag = 1;
+                cy_flag = 1.0f;
                 _step = 6;
             }                       
             else if (data == 0xFF)
             {
-                cy_flag = -1;
+                cy_flag = -1.0f;
                 _step = 6;
             }                
             else

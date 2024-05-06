@@ -645,10 +645,7 @@ void Copter::one_hz_loop()
 
     AP_Notify::flags.flying = !ap.land_complete;
 
-    gcs().send_text(MAV_SEVERITY_CRITICAL,
-                    "OpenMV X:%.1f Y:%.1f",
-                    openmv.cx,
-                    openmv.cy);
+    gcs().send_text(MAV_SEVERITY_CRITICAL,"OpenMV X:%.2f Y:%.2f Z:%.2f",openmv.cx,openmv.cy, openmv.cz);
 }
 
 void Copter::init_simple_bearing()
@@ -785,54 +782,54 @@ void Copter::update_OpenMV()
 {
     // simulation
     bool sim_openmv_new_data = false;
-    static uint32_t last_sim_new_data_time_ms = 0;
-    if(flightmode->mode_number() != Mode::Number::GUIDED) {
-        last_sim_new_data_time_ms = millis();
-        openmv.cx = 0;
-        openmv.cy = 0;
-        openmv.cz = 2;
-    } else if (millis()- last_sim_new_data_time_ms < 10000) {
-        sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
-        openmv.cx = 0.2;
-        openmv.cy = 0.4;
-        openmv.cz = 2;
-    } else if (millis()- last_sim_new_data_time_ms < 20000) {
-        sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
-        openmv.cx = 0;
-        openmv.cy = 0.4;
-        openmv.cz = 2;
-    } else if (millis()- last_sim_new_data_time_ms < 30000) {
-        sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
-        openmv.cx = -0.2;
-        openmv.cy = 0.4;
-        openmv.cz = 2;
-    } else if (millis()- last_sim_new_data_time_ms < 40000) {
-        sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
-        openmv.cx = -0.2;
-        openmv.cy = 0;
-        openmv.cz = 2;
-    } else if (millis()- last_sim_new_data_time_ms < 50000) {
-        sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
-        openmv.cx = -0.2;
-        openmv.cy = -0.4;
-        openmv.cz = 2;
-    } else if (millis()- last_sim_new_data_time_ms < 60000) {
-        sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
-        openmv.cx = 0.2;
-        openmv.cy = -0.4;
-        openmv.cz = 2;
-    } else {
-        sim_openmv_new_data = false;
-        openmv.cx = 0;
-        openmv.cy = 0;
-        openmv.cz = 2;
-    }
+    // static uint32_t last_sim_new_data_time_ms = 0;
+    // if(flightmode->mode_number() != Mode::Number::GUIDED) {
+    //     last_sim_new_data_time_ms = millis();
+    //     openmv.cx = 0;
+    //     openmv.cy = 0;
+    //     openmv.cz = 2;
+    // } else if (millis()- last_sim_new_data_time_ms < 10000) {
+    //     sim_openmv_new_data = true;
+    //     openmv.last_frame_ms = millis();
+    //     openmv.cx = 0.2;
+    //     openmv.cy = 0.4;
+    //     openmv.cz = 2;
+    // } else if (millis()- last_sim_new_data_time_ms < 20000) {
+    //     sim_openmv_new_data = true;
+    //     openmv.last_frame_ms = millis();
+    //     openmv.cx = 0;
+    //     openmv.cy = 0.4;
+    //     openmv.cz = 2;
+    // } else if (millis()- last_sim_new_data_time_ms < 30000) {
+    //     sim_openmv_new_data = true;
+    //     openmv.last_frame_ms = millis();
+    //     openmv.cx = -0.2;
+    //     openmv.cy = 0.4;
+    //     openmv.cz = 2;
+    // } else if (millis()- last_sim_new_data_time_ms < 40000) {
+    //     sim_openmv_new_data = true;
+    //     openmv.last_frame_ms = millis();
+    //     openmv.cx = -0.2;
+    //     openmv.cy = 0;
+    //     openmv.cz = 2;
+    // } else if (millis()- last_sim_new_data_time_ms < 50000) {
+    //     sim_openmv_new_data = true;
+    //     openmv.last_frame_ms = millis();
+    //     openmv.cx = -0.2;
+    //     openmv.cy = -0.4;
+    //     openmv.cz = 2;
+    // } else if (millis()- last_sim_new_data_time_ms < 60000) {
+    //     sim_openmv_new_data = true;
+    //     openmv.last_frame_ms = millis();
+    //     openmv.cx = 0.2;
+    //     openmv.cy = -0.4;
+    //     openmv.cz = 2;
+    // } else {
+    //     sim_openmv_new_data = false;
+    //     openmv.cx = 0;
+    //     openmv.cy = 0;
+    //     openmv.cz = 2;
+    // }
 
     // end of simulation code
 
@@ -852,13 +849,13 @@ void Copter::update_OpenMV()
         Vector3f v = Vector3f(openmv.cx, openmv.cy, openmv.cz);
 
         //相机坐标系-->机体坐标系
-        // const Matrix3f rotMat1 = Matrix3f(Vector3f(0.0f, 1.0f, 0.0f), //旋转矩阵
-        //                                   Vector3f(1.0f, 0.0f, 0.0f),
-        //                                   Vector3f(0.0f, 0.0f, 1.0f)); //同时将z轴坐标变为0
-        // v = rotMat1 * v;  
+        const Matrix3f rotMat1 = Matrix3f(Vector3f(0.0f, 1.0f, 0.0f), //旋转矩阵
+                                          Vector3f(1.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 1.0f));  
+        v = rotMat1 * v;  
 
-        v.x = openmv.cy;
-        v.y = openmv.cx;      
+        // v.x = openmv.cy;
+        // v.y = openmv.cx;      
 
         //机体坐标系-->NED坐标系  
         const Matrix3f &rotMat2 = copter.ahrs.get_rotation_body_to_ned();        
@@ -868,7 +865,7 @@ void Copter::update_OpenMV()
         //v.z = -v.z; //但由于z轴坐标为0，所以此处并无变化
 
         v.z = 0; //定高飞行，z轴变化量为0
-        v = v * 100.0f;
+        v = v * 100.0f; //m转换为cm
 
         //获取机体当前坐标(相对于EKF原点)
         Vector3f current_pos = inertial_nav.get_position_neu_cm();
