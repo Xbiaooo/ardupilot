@@ -274,65 +274,67 @@ void ModeAutoTrack::track_run()
     static uint32_t last_sim_new_data_time_ms = millis();
     if (millis() - last_sim_new_data_time_ms < 5000)
     {
-        openmv.cx = 0.2;
-        openmv.cy = 0.4;
-        openmv.cz = 2;
+        copter.openmv.cx = 0.2;
+        copter.openmv.cy = 0.4;
+        copter.openmv.cz = 2;
         sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
+        copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 10000)
     {
-        openmv.cx = 0;
-        openmv.cy = 0.4;
-        openmv.cz = 2;
+        copter.openmv.cx = 0;
+        copter.openmv.cy = 0.4;
+        copter.openmv.cz = 2;
         sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
+        copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 15000)
     {
-        openmv.cx = -0.2;
-        openmv.cy = 0.4;
-        openmv.cz = 2;
+        copter.openmv.cx = -0.2;
+        copter.openmv.cy = 0.4;
+        copter.openmv.cz = 2;
         sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
+        copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 20000)
     {
-        openmv.cx = -0.2;
-        openmv.cy = 0;
-        openmv.cz = 2;
+        copter.openmv.cx = -0.2;
+        copter.openmv.cy = 0;
+        copter.openmv.cz = 2;
         sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
+        copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 25000)
     {
-        openmv.cx = -0.2;
-        openmv.cy = -0.4;
-        openmv.cz = 2;
+        copter.openmv.cx = -0.2;
+        copter.openmv.cy = -0.4;
+        copter.openmv.cz = 2;
         sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
+        copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 30000)
     {
-        openmv.cx = 0.2;
-        openmv.cy = -0.4;
-        openmv.cz = 2;
+        copter.openmv.cx = 0.2;
+        copter.openmv.cy = -0.4;
+        copter.openmv.cz = 2;
         sim_openmv_new_data = true;
-        openmv.last_frame_ms = millis();
+        copter.openmv.last_frame_ms = millis();
     }
     else
     {
-        openmv.cx = 0;
-        openmv.cy = 0;
-        openmv.cz = 2;
+        copter.openmv.cx = 0;
+        copter.openmv.cy = 0;
+        copter.openmv.cz = 2;
         sim_openmv_new_data = false;
     }
     
     static uint32_t last_set_pos_target_time_ms = 0;
 
     // if(openmv.update() || sim_openmv_new_data)
-    if(sim_openmv_new_data)
+    if(copter.openmv.update() || sim_openmv_new_data)
     {       
+        copter.Log_Write_OpenMV();
+
         //像素坐标系-->图像坐标系(openmv已完成)
 
 
@@ -341,7 +343,7 @@ void ModeAutoTrack::track_run()
         //由于openmv固定在无人机正下方，且跟踪时无人机高度不变，即机体坐标系中z轴不变，
             //所以只需将图像坐标系转化为相机坐标系中的x轴和y轴即可
         //利用相似三角形计算目标中心点在相机坐标系中相对原点在x轴和y轴的偏移
-        Vector3f v = Vector3f(openmv.cx, openmv.cy, openmv.cz);
+        Vector3f v = Vector3f(copter.openmv.cx, copter.openmv.cy, copter.openmv.cz);
 
         //相机坐标系-->机体坐标系
         const Matrix3f rotMat1 = Matrix3f(Vector3f(0.0f, 1.0f, 0.0f), //旋转矩阵

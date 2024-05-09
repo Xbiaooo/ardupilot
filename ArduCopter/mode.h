@@ -1142,7 +1142,7 @@ protected:
 
 private:
 
-    AP_OpenMV openmv{};
+    //AP_OpenMV openmv{};
     //void update_OpenMV(void);
     
     void takeoff_run();
