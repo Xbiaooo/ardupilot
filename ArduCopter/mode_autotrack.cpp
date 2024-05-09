@@ -11,6 +11,8 @@ bool ModeAutoTrack::init(bool ignore_checks)
     wp_nav->wp_and_spline_init();
     
     cruise_flag = 0;
+    //track_flag = 0;
+
     land_pause = true;
 
     takeoff_finish = true;
@@ -21,6 +23,7 @@ bool ModeAutoTrack::init(bool ignore_checks)
 //此模式的周期调用
 void ModeAutoTrack::run()
 {
+    static bool track_flag = 0;
     switch (_mode)
     {
     case SubMode::TAKEOFF:
@@ -28,20 +31,22 @@ void ModeAutoTrack::run()
         break;
 
     case SubMode::AB_CRUISE:
-        if (openmv.update())    //当openmv识别到目标，有信息传递过来时，切换为跟踪模式
+        static int sim_time = millis();
+        if (millis() - sim_time >= 10000)
         {
-            set_submode(SubMode::TRACK);
-            target = inertial_nav.get_position_neu_cm();
+            track_flag = 1;
+            gcs().send_text(MAV_SEVERITY_INFO, "error");
         }
-        else
+        if (!track_flag)
         {
             cruise_run();
         }
-        break;
-
-    case SubMode::TRACK:
-        track_run();
-        break;
+        else
+        {
+            //cruise_run();
+            track_run();
+        }  
+        break;  
 
     case SubMode::LAND:
         land_run();
@@ -159,6 +164,8 @@ void ModeAutoTrack::set_cruise_point(Point next_point, uint16_t time_ms, bool ne
 //————开始巡航
 void ModeAutoTrack::cruise_run()
 {
+
+    
     if (!cruise_flag)
     {
         cruise_start();
@@ -231,24 +238,6 @@ void ModeAutoTrack::cruise_run()
 
         pos_control_run();
         
-        // // if not armed set throttle to zero and exit immediately
-        // if (is_disarmed_or_landed()) {
-        //     // do not spool down tradheli when on the ground with motor interlock enabled
-        //     make_safe_ground_handling(copter.is_tradheli() && motors->get_interlock());
-        //     return;
-        // }
-
-        // // set motors to full range
-        // motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-
-        // // run waypoint controller
-        // copter.failsafe_terrain_set_status(wp_nav->update_wpnav());
-
-        // // call z-axis position controller (wpnav should have already updated it's alt target)
-        // pos_control->update_z_controller();
-
-        // // call attitude controller with auto yaw
-        // attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
     }
     
     
@@ -282,10 +271,48 @@ void ModeAutoTrack::pos_control_run()
 //————开始跟踪
 void ModeAutoTrack::track_run()
 {
-    // static Vector3f targ;
+    gcs().send_text(MAV_SEVERITY_INFO, "why????");
+
+    //simulation
+    static bool sim_openmv_new_data = false;
+    static uint32_t last_sim_new_data_time_ms = millis();
+    if (millis() - last_sim_new_data_time_ms < 5000)
+    {
+        openmv.cx = 1;
+        openmv.cy = 1;
+        sim_openmv_new_data = true;
+    }
+    else if (millis() - last_sim_new_data_time_ms < 10000)
+    {
+        openmv.cx = 120;
+        openmv.cy = 80;
+        sim_openmv_new_data = true;
+    }
+    else if (millis() - last_sim_new_data_time_ms < 15000)
+    {
+        openmv.cx = 80;
+        openmv.cy = 60;
+        sim_openmv_new_data = true;
+    }
+    else if (millis() - last_sim_new_data_time_ms < 20000)
+    {
+        openmv.cx = 60;
+        openmv.cy = 90;
+        sim_openmv_new_data = true;
+    }
+    else
+    {
+        sim_openmv_new_data = false;
+    }
+    
+    
+    
+    
+
     static uint32_t last_set_pos_target_time_ms = 0;
 
-    if(openmv.update())
+    // if(openmv.update() || sim_openmv_new_data)
+    if(sim_openmv_new_data)
     {       
         //将像素坐标系转换为图像坐标系
         //像素坐标系-->图像坐标系
@@ -315,6 +342,7 @@ void ModeAutoTrack::track_run()
 
         //NED坐标系-->NEU坐标系
         v.z = -v.z; //但由于z轴坐标为0，所以此处并无变化
+        v = v*100.0f;
 
         //获取机体当前坐标(相对于EKF原点)
         Vector3f current_pos = inertial_nav.get_position_neu_cm();
@@ -346,6 +374,82 @@ void ModeAutoTrack::track_run()
          
     }
     pos_control_run();
+
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+    //     if (!cruise_flag)
+    // {
+    //     cruise_start();
+    //     cruise_flag = 1;
+    // }
+    // else
+    // {
+    //     	// gcs().send_text(MAV_SEVERITY_INFO, 
+    //         //     "count: %d",
+    //         //      cruise_count);
+
+    //     if (cruise_count < cruise_sum)
+    //     {
+    //         if (target_point == Point::B)
+    //         {
+    //             if (wp_nav->reached_wp_destination())
+    //             {
+    //                 //wp_nav->set_wp_destination(point_A, false);
+    //                 if(point_pause)
+    //                 {
+    //                     //gcs().send_text(MAV_SEVERITY_INFO,  "wait 5s");
+    //                     point_reach_time = millis();
+    //                     point_pause = false;
+    //                 }
+    //                 set_cruise_point(Point::A);
+    //             }                
+    //         }
+    //         else if (target_point == Point::A)
+    //         {
+    //             if (wp_nav->reached_wp_destination())
+    //             {
+    //                 //wp_nav->set_wp_destination(point_B, false);
+    //                 if(point_pause)
+    //                 {
+    //                     point_reach_time = millis();
+    //                     point_pause = false;
+    //                 }
+    //                 set_cruise_point(Point::B);
+    //                 //cruise_count++;
+    //             } 
+    //         }                       
+    //     }
+    //     else if (cruise_count == cruise_sum)
+    //     {
+    //         if (target_point == Point::B)
+    //         {
+    //             if (wp_nav->reached_wp_destination())
+    //             {
+    //                 //wp_nav->set_wp_destination(point_A, false);
+    //                 if(point_pause)
+    //                 {
+    //                     point_reach_time = millis();
+    //                     point_pause = false;
+    //                 }
+    //                 set_cruise_point(Point::A);
+    //             }                
+    //         }
+    //         else if (target_point == Point::A)
+    //         {
+    //             if (wp_nav->reached_wp_destination())
+    //             {
+    //                 gcs().send_text(MAV_SEVERITY_INFO, "Cruise finished, wait 5 seconds, then land start");
+    //                 set_submode(SubMode::LAND);
+    //                 cruise_flag = 0;
+    //                 cruise_finish_time = millis();
+    //             }                 
+    //         }
+                
+    //     }
+
+    //     pos_control_run();
+        
+    // }
     
 }
 

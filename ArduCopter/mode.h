@@ -1129,7 +1129,6 @@ public:
     enum class SubMode : uint8_t {
         TAKEOFF,
         AB_CRUISE,
-        TRACK,
         LAND,
     };
 
@@ -1177,6 +1176,7 @@ private:
     
     //track的参数
     Vector3f target;  //跟踪的目标位置
+    //bool track_flag = 0;
 
     //land的参数
     uint32_t cruise_finish_time;
