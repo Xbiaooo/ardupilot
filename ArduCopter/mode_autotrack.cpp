@@ -35,7 +35,6 @@ void ModeAutoTrack::run()
         if (millis() - sim_time >= 10000)
         {
             track_flag = 1;
-            gcs().send_text(MAV_SEVERITY_INFO, "error");
         }
         if (!track_flag)
         {
@@ -112,7 +111,6 @@ void ModeAutoTrack::cruise_start()
     set_cruise_point(Point::B,0,false);
 
     // initialise yaw
-    //auto_yaw.set_mode_to_default(false);   
     auto_yaw.set_mode(AutoYaw::Mode::HOLD);
 }
 
@@ -271,69 +269,84 @@ void ModeAutoTrack::pos_control_run()
 //————开始跟踪
 void ModeAutoTrack::track_run()
 {
-    gcs().send_text(MAV_SEVERITY_INFO, "why????");
-
     //simulation
-    static bool sim_openmv_new_data = false;
+    bool sim_openmv_new_data = false;
     static uint32_t last_sim_new_data_time_ms = millis();
     if (millis() - last_sim_new_data_time_ms < 5000)
     {
-        openmv.cx = 1;
-        openmv.cy = 1;
+        openmv.cx = 0.2;
+        openmv.cy = 0.4;
+        openmv.cz = 2;
         sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 10000)
     {
-        openmv.cx = 120;
-        openmv.cy = 80;
+        openmv.cx = 0;
+        openmv.cy = 0.4;
+        openmv.cz = 2;
         sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 15000)
     {
-        openmv.cx = 80;
-        openmv.cy = 60;
+        openmv.cx = -0.2;
+        openmv.cy = 0.4;
+        openmv.cz = 2;
         sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 20000)
     {
-        openmv.cx = 60;
-        openmv.cy = 90;
+        openmv.cx = -0.2;
+        openmv.cy = 0;
+        openmv.cz = 2;
         sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+    }
+    else if (millis() - last_sim_new_data_time_ms < 25000)
+    {
+        openmv.cx = -0.2;
+        openmv.cy = -0.4;
+        openmv.cz = 2;
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
+    }
+    else if (millis() - last_sim_new_data_time_ms < 30000)
+    {
+        openmv.cx = 0.2;
+        openmv.cy = -0.4;
+        openmv.cz = 2;
+        sim_openmv_new_data = true;
+        openmv.last_frame_ms = millis();
     }
     else
     {
+        openmv.cx = 0;
+        openmv.cy = 0;
+        openmv.cz = 2;
         sim_openmv_new_data = false;
     }
     
-    
-    
-    
-
     static uint32_t last_set_pos_target_time_ms = 0;
 
     // if(openmv.update() || sim_openmv_new_data)
     if(sim_openmv_new_data)
     {       
-        //将像素坐标系转换为图像坐标系
-        //像素坐标系-->图像坐标系
-        int16_t image_frame_x = (int16_t)openmv.cx - 80;
-        int16_t image_frame_y = (int16_t)openmv.cy - 60;
+        //像素坐标系-->图像坐标系(openmv已完成)
+
 
         //图像坐标系(2D)-->相机坐标系(3D)
         //相机坐标系：以相机光心为原点，前为z轴、右为x轴、下为y轴
         //由于openmv固定在无人机正下方，且跟踪时无人机高度不变，即机体坐标系中z轴不变，
             //所以只需将图像坐标系转化为相机坐标系中的x轴和y轴即可
         //利用相似三角形计算目标中心点在相机坐标系中相对原点在x轴和y轴的偏移
-        float altitude =  copter.flightmode->get_alt_above_ground_cm() * 10.0f; //altitude实际上即为目标在相机坐标系中的z轴坐标
-        float camera_frame_x = image_frame_x * openmv.px_length * altitude / openmv.focal_length;
-        float camera_frame_y = image_frame_y * openmv.px_length * altitude / openmv.focal_length;
-
-        Vector3f v = Vector3f(camera_frame_x, camera_frame_y, altitude);
+        Vector3f v = Vector3f(openmv.cx, openmv.cy, openmv.cz);
 
         //相机坐标系-->机体坐标系
-        const Matrix3f rotMat1 = Matrix3f(Vector3f(0, -1, 0), //旋转矩阵
-                                          Vector3f(1, 0, 0),
-                                          Vector3f(0, 0, 0)); //同时将z轴坐标变为0
+        const Matrix3f rotMat1 = Matrix3f(Vector3f(0.0f, 1.0f, 0.0f), //旋转矩阵
+                                          Vector3f(1.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 1.0f));  
         v = rotMat1 * v;         
 
         //机体坐标系-->NED坐标系  
@@ -341,8 +354,10 @@ void ModeAutoTrack::track_run()
         v = rotMat2 * v;
 
         //NED坐标系-->NEU坐标系
-        v.z = -v.z; //但由于z轴坐标为0，所以此处并无变化
-        v = v*100.0f;
+        v.z = -v.z;
+
+        v.z = 0; //定高飞行，z轴变化量为0
+        v = v * 100.0f; //m转换为cm
 
         //获取机体当前坐标(相对于EKF原点)
         Vector3f current_pos = inertial_nav.get_position_neu_cm();
@@ -359,12 +374,13 @@ void ModeAutoTrack::track_run()
         if(millis() - last_set_pos_target_time_ms > 500) // call in 2Hz
         {  
             wp_nav->set_wp_destination(target, false);
+            // wp_nav->set_wp_destination(current_pos, false);
             last_set_pos_target_time_ms= millis();
         }
     }
     else
     {
-         wp_nav->set_wp_destination(target, false);
+         //wp_nav->set_wp_destination(current_pos, false);  这句得注释掉，不然有问题
          //视野中失去目标5s后，原地降落
          if (millis() - last_set_pos_target_time_ms > 5000)
          {
@@ -373,83 +389,8 @@ void ModeAutoTrack::track_run()
          }
          
     }
+    
     pos_control_run();
-
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-    //     if (!cruise_flag)
-    // {
-    //     cruise_start();
-    //     cruise_flag = 1;
-    // }
-    // else
-    // {
-    //     	// gcs().send_text(MAV_SEVERITY_INFO, 
-    //         //     "count: %d",
-    //         //      cruise_count);
-
-    //     if (cruise_count < cruise_sum)
-    //     {
-    //         if (target_point == Point::B)
-    //         {
-    //             if (wp_nav->reached_wp_destination())
-    //             {
-    //                 //wp_nav->set_wp_destination(point_A, false);
-    //                 if(point_pause)
-    //                 {
-    //                     //gcs().send_text(MAV_SEVERITY_INFO,  "wait 5s");
-    //                     point_reach_time = millis();
-    //                     point_pause = false;
-    //                 }
-    //                 set_cruise_point(Point::A);
-    //             }                
-    //         }
-    //         else if (target_point == Point::A)
-    //         {
-    //             if (wp_nav->reached_wp_destination())
-    //             {
-    //                 //wp_nav->set_wp_destination(point_B, false);
-    //                 if(point_pause)
-    //                 {
-    //                     point_reach_time = millis();
-    //                     point_pause = false;
-    //                 }
-    //                 set_cruise_point(Point::B);
-    //                 //cruise_count++;
-    //             } 
-    //         }                       
-    //     }
-    //     else if (cruise_count == cruise_sum)
-    //     {
-    //         if (target_point == Point::B)
-    //         {
-    //             if (wp_nav->reached_wp_destination())
-    //             {
-    //                 //wp_nav->set_wp_destination(point_A, false);
-    //                 if(point_pause)
-    //                 {
-    //                     point_reach_time = millis();
-    //                     point_pause = false;
-    //                 }
-    //                 set_cruise_point(Point::A);
-    //             }                
-    //         }
-    //         else if (target_point == Point::A)
-    //         {
-    //             if (wp_nav->reached_wp_destination())
-    //             {
-    //                 gcs().send_text(MAV_SEVERITY_INFO, "Cruise finished, wait 5 seconds, then land start");
-    //                 set_submode(SubMode::LAND);
-    //                 cruise_flag = 0;
-    //                 cruise_finish_time = millis();
-    //             }                 
-    //         }
-                
-    //     }
-
-    //     pos_control_run();
-        
-    // }
     
 }
 

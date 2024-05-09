@@ -52,21 +52,76 @@ bool AP_OpenMV::update()
             break;
 
         case 2:
-            _cx_temp = data;    //x轴坐标
-            _step = 3;
+            if (data == 0x00)  //x正负
+            {
+                cx_flag = 1.0f;
+                _step = 3;
+            }                       
+            else if (data == 0xFF)
+            {
+                cx_flag = -1.0f;
+                _step = 3;
+            }                
+            else
+            {
+                _step = 0;
+            }
             break;
 
         case 3:
-            _cy_temp = data;    //y轴坐标
+            cx_int_temp = data;    //x轴坐标整数值
             _step = 4;
             break;
 
         case 4:
+            cx_dec_temp = data;   //x轴坐标小数值
+            _step = 5;
+            break;
+
+        case 5:
+            if (data == 0x00)  //y正负
+            {
+                cy_flag = 1.0f;
+                _step = 6;
+            }                       
+            else if (data == 0xFF)
+            {
+                cy_flag = -1.0f;
+                _step = 6;
+            }                
+            else
+            {
+                _step = 0;
+            }
+            break;
+
+        case 6:
+            cy_int_temp = data;    //y轴坐标整数值
+            _step = 7;
+            break;
+
+        case 7:
+            cy_dec_temp = data;   //y轴坐标小数值
+            _step = 8;
+            break;
+
+        case 8:
+            cz_int_temp = data;    //z轴坐标整数值
+            _step = 9;
+            break;
+
+        case 9:
+            cz_dec_temp = data;   //z轴坐标小数值
+            _step = 10;
+            break;
+
+        case 10:
             _step = 0;
-            checksum = _cx_temp + _cy_temp;
+            checksum = cx_dec_temp + cy_dec_temp;
             if(checksum == data) {
-                cx = _cx_temp;
-                cy = _cy_temp;
+                cx = cx_flag * (cx_int_temp + 0.01 * cx_dec_temp);
+                cy = cy_flag * (cy_int_temp + 0.01 * cy_dec_temp);
+                cz = cz_int_temp + 0.01 * cz_dec_temp;
                 last_frame_ms = AP_HAL::millis();   //记录这一帧成功解析的时间
                 return true;
             }
