@@ -23,7 +23,7 @@ bool ModeAutoTrack::init(bool ignore_checks)
 //此模式的周期调用
 void ModeAutoTrack::run()
 {
-    static bool track_flag = 0;
+    // static bool track_flag = 0;
     switch (_mode)
     {
     case SubMode::TAKEOFF:
@@ -31,21 +31,27 @@ void ModeAutoTrack::run()
         break;
 
     case SubMode::AB_CRUISE:
-        static int sim_time = millis();
-        if (millis() - sim_time >= 10000)
-        {
-            track_flag = 1;
-        }
-        if (!track_flag)
-        {
-            cruise_run();
-        }
-        else
-        {
-            //cruise_run();
-            track_run();
-        }  
+        // static int sim_time = millis();
+        // if (millis() - sim_time >= 10000)
+        // {
+        //     track_flag = 1;
+        // }
+        // if (!track_flag)
+        // {
+        //     cruise_run();
+        // }
+        // else
+        // {
+        //     //cruise_run();
+        //     track_run();
+        // }  
+
+        cruise_run();
         break;  
+
+    case SubMode::TRACK:
+        track_run();
+        break;
 
     case SubMode::LAND:
         land_run();
@@ -162,8 +168,6 @@ void ModeAutoTrack::set_cruise_point(Point next_point, uint16_t time_ms, bool ne
 //————开始巡航
 void ModeAutoTrack::cruise_run()
 {
-
-    
     if (!cruise_flag)
     {
         cruise_start();
@@ -236,6 +240,16 @@ void ModeAutoTrack::cruise_run()
 
         pos_control_run();
         
+        static int sim_time = millis();
+        static bool track_flag = 0;
+        if (millis() - sim_time >= 10000)
+        {
+            track_flag = 1;
+        }
+        if (copter.openmv.update() || track_flag)
+        {
+            set_submode(SubMode::TRACK);
+        }       
     }
     
     
@@ -312,8 +326,8 @@ void ModeAutoTrack::track_run()
     static uint32_t last_sim_new_data_time_ms = millis();
     if (millis() - last_sim_new_data_time_ms < 5000)
     {
-        copter.openmv.cx = 0.2;
-        copter.openmv.cy = 0.4;
+        copter.openmv.cx = 0.4;
+        copter.openmv.cy = 0.8;
         copter.openmv.cz = 0.5;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
@@ -321,22 +335,22 @@ void ModeAutoTrack::track_run()
     else if (millis() - last_sim_new_data_time_ms < 10000)
     {
         copter.openmv.cx = 0;
-        copter.openmv.cy = 0.4;
+        copter.openmv.cy = 0.8;
         copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 15000)
     {
-        copter.openmv.cx = -0.2;
-        copter.openmv.cy = 0.4;
+        copter.openmv.cx = -0.4;
+        copter.openmv.cy = 0.8;
         copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 20000)
     {
-        copter.openmv.cx = -0.2;
+        copter.openmv.cx = -0.4;
         copter.openmv.cy = 0;
         copter.openmv.cz = 1.5;
         sim_openmv_new_data = true;
@@ -344,16 +358,16 @@ void ModeAutoTrack::track_run()
     }
     else if (millis() - last_sim_new_data_time_ms < 25000)
     {
-        copter.openmv.cx = -0.2;
-        copter.openmv.cy = -0.4;
+        copter.openmv.cx = -0.4;
+        copter.openmv.cy = -0.8;
         copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
     else if (millis() - last_sim_new_data_time_ms < 30000)
     {
-        copter.openmv.cx = 0.2;
-        copter.openmv.cy = -0.4;
+        copter.openmv.cx = 0.4;
+        copter.openmv.cy = -0.8;
         copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();

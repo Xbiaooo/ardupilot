@@ -1122,13 +1122,14 @@ public:
     //  must_nagivate is true if mode must also control horizontal position  
     bool has_user_takeoff(bool must_navigate) const override { return false; } // 不允许在此模式下用户控制起飞
     
-    bool in_guided_mode() const override { return _mode == SubMode::AB_CRUISE; } // 此模式是一种引导的模式
+    bool in_guided_mode() const override { return _mode == SubMode::AB_CRUISE || _mode == SubMode::TRACK; } // 此模式是一种引导的模式
 
     // 子模式
     // 整个过程分为起飞、巡航、跟踪、降落4个子模式
     enum class SubMode : uint8_t {
         TAKEOFF,
         AB_CRUISE,
+        TRACK,
         LAND,
     };
 
