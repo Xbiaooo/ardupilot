@@ -1176,6 +1176,7 @@ private:
     
     //track的参数
     Vector3f target;  //跟踪的目标位置
+    Vector3f set_target_pos(float x, float y, float z);
     //bool track_flag = 0;
 
     //land的参数

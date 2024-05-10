@@ -85,7 +85,7 @@ void ModeAutoTrack::takeoff_run()
     if(auto_takeoff_complete && millis()-takeoff_finish_time >= 5000 )
     {
         set_submode(SubMode::AB_CRUISE);
-        gcs().send_text(MAV_SEVERITY_INFO, "now go into draw5star submode");
+        gcs().send_text(MAV_SEVERITY_INFO, "start cruising now");
     }
     
     
@@ -121,7 +121,7 @@ void ModeAutoTrack::generate_point()
 
     wp_nav->get_wp_stopping_point(point_A);
 
-    point_B = point_A + Vector3f(1.0f, 0, 0) * radius_cm;
+    point_B = point_A + Vector3f(0, 1.0f, 0) * radius_cm;
 }
 
 //设置下一个巡航航点
@@ -266,6 +266,44 @@ void ModeAutoTrack::pos_control_run()
 
 ////////////////////////////////////////////////////////////
 // track 函数
+
+//设置跟踪时本次更新的无人机目标位置
+Vector3f ModeAutoTrack::set_target_pos(float x, float y, float z)
+{
+    //像素坐标系-->图像坐标系(openmv已完成)
+
+
+    //图像坐标系(2D)-->相机坐标系(3D)
+    //相机坐标系：以相机光心为原点，前为z轴、右为x轴、下为y轴
+    //由于openmv固定在无人机正下方，且跟踪时无人机高度不变，即机体坐标系中z轴不变，
+        //所以只需将图像坐标系转化为相机坐标系中的x轴和y轴即可
+    //利用相似三角形计算目标中心点在相机坐标系中相对原点在x轴和y轴的偏移
+    Vector3f v = Vector3f(copter.openmv.cx, copter.openmv.cy, copter.openmv.cz);
+
+    //相机坐标系-->机体坐标系
+    const Matrix3f rotMat1 = Matrix3f(Vector3f(0.0f, 1.0f, 0.0f), //旋转矩阵
+                                        Vector3f(1.0f, 0.0f, 0.0f),
+                                        Vector3f(0.0f, 0.0f, 1.0f));  
+    v = rotMat1 * v;         
+
+    //机体坐标系-->NED坐标系  
+    const Matrix3f &rotMat2 = copter.ahrs.get_rotation_body_to_ned();        
+    v = rotMat2 * v;
+
+    //NED坐标系-->NEU坐标系
+    v.z = -v.z;
+
+    v.z = 1-copter.openmv.cz; //z轴方向上无人机与目标保持1m的距离
+    //v.z = 0; //定高飞行，z轴变化量为0
+    v = v * 100.0f; //m转换为cm
+
+    //获取机体当前坐标(相对于EKF原点)
+    Vector3f current_pos = inertial_nav.get_position_neu_cm();
+
+    //目标位置坐标(相对于EKF原点)
+    return current_pos + v;
+}
+
 //————开始跟踪
 void ModeAutoTrack::track_run()
 {
@@ -276,7 +314,7 @@ void ModeAutoTrack::track_run()
     {
         copter.openmv.cx = 0.2;
         copter.openmv.cy = 0.4;
-        copter.openmv.cz = 2;
+        copter.openmv.cz = 0.5;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
@@ -284,7 +322,7 @@ void ModeAutoTrack::track_run()
     {
         copter.openmv.cx = 0;
         copter.openmv.cy = 0.4;
-        copter.openmv.cz = 2;
+        copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
@@ -292,7 +330,7 @@ void ModeAutoTrack::track_run()
     {
         copter.openmv.cx = -0.2;
         copter.openmv.cy = 0.4;
-        copter.openmv.cz = 2;
+        copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
@@ -300,7 +338,7 @@ void ModeAutoTrack::track_run()
     {
         copter.openmv.cx = -0.2;
         copter.openmv.cy = 0;
-        copter.openmv.cz = 2;
+        copter.openmv.cz = 1.5;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
@@ -308,7 +346,7 @@ void ModeAutoTrack::track_run()
     {
         copter.openmv.cx = -0.2;
         copter.openmv.cy = -0.4;
-        copter.openmv.cz = 2;
+        copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
@@ -316,7 +354,7 @@ void ModeAutoTrack::track_run()
     {
         copter.openmv.cx = 0.2;
         copter.openmv.cy = -0.4;
-        copter.openmv.cz = 2;
+        copter.openmv.cz = 1;
         sim_openmv_new_data = true;
         copter.openmv.last_frame_ms = millis();
     }
@@ -335,37 +373,8 @@ void ModeAutoTrack::track_run()
     {       
         copter.Log_Write_OpenMV();
 
-        //像素坐标系-->图像坐标系(openmv已完成)
+        target = set_target_pos(copter.openmv.cx, copter.openmv.cy, copter.openmv.cz);
 
-
-        //图像坐标系(2D)-->相机坐标系(3D)
-        //相机坐标系：以相机光心为原点，前为z轴、右为x轴、下为y轴
-        //由于openmv固定在无人机正下方，且跟踪时无人机高度不变，即机体坐标系中z轴不变，
-            //所以只需将图像坐标系转化为相机坐标系中的x轴和y轴即可
-        //利用相似三角形计算目标中心点在相机坐标系中相对原点在x轴和y轴的偏移
-        Vector3f v = Vector3f(copter.openmv.cx, copter.openmv.cy, copter.openmv.cz);
-
-        //相机坐标系-->机体坐标系
-        const Matrix3f rotMat1 = Matrix3f(Vector3f(0.0f, 1.0f, 0.0f), //旋转矩阵
-                                          Vector3f(1.0f, 0.0f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 1.0f));  
-        v = rotMat1 * v;         
-
-        //机体坐标系-->NED坐标系  
-        const Matrix3f &rotMat2 = copter.ahrs.get_rotation_body_to_ned();        
-        v = rotMat2 * v;
-
-        //NED坐标系-->NEU坐标系
-        v.z = -v.z;
-
-        v.z = 0; //定高飞行，z轴变化量为0
-        v = v * 100.0f; //m转换为cm
-
-        //获取机体当前坐标(相对于EKF原点)
-        Vector3f current_pos = inertial_nav.get_position_neu_cm();
-
-        //目标位置坐标(相对于EKF原点)
-        target = current_pos + v;
         //首次更新目标位置
         if (last_set_pos_target_time_ms == 0)
         {
