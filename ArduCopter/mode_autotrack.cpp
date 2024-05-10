@@ -71,12 +71,12 @@ void ModeAutoTrack::takeoff_run()
     {
         takeoff_finish = false;
         takeoff_finish_time = millis();
-        gcs().send_text(MAV_SEVERITY_INFO, "takeoff finished,wait 5 seconds");
+        gcs().send_text(MAV_SEVERITY_INFO, "takeoff finished");
     }
     if(auto_takeoff_complete && millis()-takeoff_finish_time >= 5000 )
     {
         set_submode(SubMode::AB_CRUISE);
-        gcs().send_text(MAV_SEVERITY_INFO, "start cruising now");
+        gcs().send_text(MAV_SEVERITY_INFO, "start cruising");
     }
     
     
@@ -153,95 +153,101 @@ void ModeAutoTrack::set_cruise_point(Point next_point, uint16_t time_ms, bool ne
 //————开始巡航
 void ModeAutoTrack::cruise_run()
 {
-    if (!cruise_flag)
+
+    if (copter.openmv.update())
     {
-        cruise_start();
-        cruise_flag = 1;
+        set_submode(SubMode::TRACK);
+        gcs().send_text(MAV_SEVERITY_INFO, "start tracking");
     }
     else
     {
-        	// gcs().send_text(MAV_SEVERITY_INFO, 
-            //     "count: %d",
-            //      cruise_count);
-
-        if (cruise_count < cruise_sum)
+        if (!cruise_flag)
         {
-            if (target_point == Point::B)
-            {
-                if (wp_nav->reached_wp_destination())
-                {
-                    //wp_nav->set_wp_destination(point_A, false);
-                    if(point_pause)
-                    {
-                        //gcs().send_text(MAV_SEVERITY_INFO,  "wait 5s");
-                        point_reach_time = millis();
-                        point_pause = false;
-                    }
-                    set_cruise_point(Point::A);
-                }                
-            }
-            else if (target_point == Point::A)
-            {
-                if (wp_nav->reached_wp_destination())
-                {
-                    //wp_nav->set_wp_destination(point_B, false);
-                    if(point_pause)
-                    {
-                        point_reach_time = millis();
-                        point_pause = false;
-                    }
-                    set_cruise_point(Point::B);
-                    //cruise_count++;
-                } 
-            }                       
+            cruise_start();
+            cruise_flag = 1;
         }
-        else if (cruise_count == cruise_sum)
+        else
         {
-            if (target_point == Point::B)
+            //————simulation
+            // static int sim_time = millis();
+            // static bool track_flag = 0;
+            // if (millis() - sim_time >= 10000)
+            // {
+            //     track_flag = 1;
+            // }
+            // if (copter.openmv.update() || track_flag)
+            // {
+            //     set_submode(SubMode::TRACK);
+            // }       
+
+
+                // gcs().send_text(MAV_SEVERITY_INFO, 
+                //     "count: %d",
+                //      cruise_count);
+
+            if (cruise_count < cruise_sum)
             {
-                if (wp_nav->reached_wp_destination())
+                if (target_point == Point::B)
                 {
-                    //wp_nav->set_wp_destination(point_A, false);
-                    if(point_pause)
+                    if (wp_nav->reached_wp_destination())
                     {
-                        point_reach_time = millis();
-                        point_pause = false;
-                    }
-                    set_cruise_point(Point::A);
-                }                
-            }
-            else if (target_point == Point::A)
-            {
-                if (wp_nav->reached_wp_destination())
+                        //wp_nav->set_wp_destination(point_A, false);
+                        if(point_pause)
+                        {
+                            //gcs().send_text(MAV_SEVERITY_INFO,  "wait 5s");
+                            point_reach_time = millis();
+                            point_pause = false;
+                        }
+                        set_cruise_point(Point::A);
+                    }                
+                }
+                else if (target_point == Point::A)
                 {
-                    gcs().send_text(MAV_SEVERITY_INFO, "Cruise finished, wait 5 seconds, then land start");
-                    set_submode(SubMode::LAND);
-                    cruise_flag = 0;
-                    cruise_finish_time = millis();
-                }                 
+                    if (wp_nav->reached_wp_destination())
+                    {
+                        //wp_nav->set_wp_destination(point_B, false);
+                        if(point_pause)
+                        {
+                            point_reach_time = millis();
+                            point_pause = false;
+                        }
+                        set_cruise_point(Point::B);
+                        //cruise_count++;
+                    } 
+                }                       
             }
-                
+            else if (cruise_count == cruise_sum)
+            {
+                if (target_point == Point::B)
+                {
+                    if (wp_nav->reached_wp_destination())
+                    {
+                        //wp_nav->set_wp_destination(point_A, false);
+                        if(point_pause)
+                        {
+                            point_reach_time = millis();
+                            point_pause = false;
+                        }
+                        set_cruise_point(Point::A);
+                    }                
+                }
+                else if (target_point == Point::A)
+                {
+                    if (wp_nav->reached_wp_destination())
+                    {
+                        gcs().send_text(MAV_SEVERITY_INFO, "Cruise finished");
+                        set_submode(SubMode::LAND);
+                        cruise_flag = 0;
+                        cruise_finish_time = millis();
+                    }                 
+                }
+                    
+            }
+
+            pos_control_run();
         }
-
-        pos_control_run();
-        
-        //————simulation
-        // static int sim_time = millis();
-        // static bool track_flag = 0;
-        // if (millis() - sim_time >= 10000)
-        // {
-        //     track_flag = 1;
-        // }
-        // if (copter.openmv.update() || track_flag)
-        // {
-        //     set_submode(SubMode::TRACK);
-        // }       
-
-        if (copter.openmv.update())
-        {
-            set_submode(SubMode::TRACK);
-        } 
     }
+
 }
 
 //位置控制器，由cruise和track共用
