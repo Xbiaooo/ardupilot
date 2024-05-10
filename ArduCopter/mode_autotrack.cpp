@@ -31,21 +31,6 @@ void ModeAutoTrack::run()
         break;
 
     case SubMode::AB_CRUISE:
-        // static int sim_time = millis();
-        // if (millis() - sim_time >= 10000)
-        // {
-        //     track_flag = 1;
-        // }
-        // if (!track_flag)
-        // {
-        //     cruise_run();
-        // }
-        // else
-        // {
-        //     //cruise_run();
-        //     track_run();
-        // }  
-
         cruise_run();
         break;  
 
@@ -240,19 +225,23 @@ void ModeAutoTrack::cruise_run()
 
         pos_control_run();
         
-        static int sim_time = millis();
-        static bool track_flag = 0;
-        if (millis() - sim_time >= 10000)
-        {
-            track_flag = 1;
-        }
-        if (copter.openmv.update() || track_flag)
+        //————simulation
+        // static int sim_time = millis();
+        // static bool track_flag = 0;
+        // if (millis() - sim_time >= 10000)
+        // {
+        //     track_flag = 1;
+        // }
+        // if (copter.openmv.update() || track_flag)
+        // {
+        //     set_submode(SubMode::TRACK);
+        // }       
+
+        if (copter.openmv.update())
         {
             set_submode(SubMode::TRACK);
-        }       
+        } 
     }
-    
-    
 }
 
 //位置控制器，由cruise和track共用
@@ -322,68 +311,69 @@ Vector3f ModeAutoTrack::set_target_pos(float x, float y, float z)
 void ModeAutoTrack::track_run()
 {
     //simulation
-    bool sim_openmv_new_data = false;
-    static uint32_t last_sim_new_data_time_ms = millis();
-    if (millis() - last_sim_new_data_time_ms < 5000)
-    {
-        copter.openmv.cx = 0.4;
-        copter.openmv.cy = 0.8;
-        copter.openmv.cz = 0.5;
-        sim_openmv_new_data = true;
-        copter.openmv.last_frame_ms = millis();
-    }
-    else if (millis() - last_sim_new_data_time_ms < 10000)
-    {
-        copter.openmv.cx = 0;
-        copter.openmv.cy = 0.8;
-        copter.openmv.cz = 1;
-        sim_openmv_new_data = true;
-        copter.openmv.last_frame_ms = millis();
-    }
-    else if (millis() - last_sim_new_data_time_ms < 15000)
-    {
-        copter.openmv.cx = -0.4;
-        copter.openmv.cy = 0.8;
-        copter.openmv.cz = 1;
-        sim_openmv_new_data = true;
-        copter.openmv.last_frame_ms = millis();
-    }
-    else if (millis() - last_sim_new_data_time_ms < 20000)
-    {
-        copter.openmv.cx = -0.4;
-        copter.openmv.cy = 0;
-        copter.openmv.cz = 1.5;
-        sim_openmv_new_data = true;
-        copter.openmv.last_frame_ms = millis();
-    }
-    else if (millis() - last_sim_new_data_time_ms < 25000)
-    {
-        copter.openmv.cx = -0.4;
-        copter.openmv.cy = -0.8;
-        copter.openmv.cz = 1;
-        sim_openmv_new_data = true;
-        copter.openmv.last_frame_ms = millis();
-    }
-    else if (millis() - last_sim_new_data_time_ms < 30000)
-    {
-        copter.openmv.cx = 0.4;
-        copter.openmv.cy = -0.8;
-        copter.openmv.cz = 1;
-        sim_openmv_new_data = true;
-        copter.openmv.last_frame_ms = millis();
-    }
-    else
-    {
-        copter.openmv.cx = 0;
-        copter.openmv.cy = 0;
-        copter.openmv.cz = 2;
-        sim_openmv_new_data = false;
-    }
+    // bool sim_openmv_new_data = false;
+    // static uint32_t last_sim_new_data_time_ms = millis();
+    // if (millis() - last_sim_new_data_time_ms < 5000)
+    // {
+    //     copter.openmv.cx = 0.4;
+    //     copter.openmv.cy = 0.8;
+    //     copter.openmv.cz = 0.5;
+    //     sim_openmv_new_data = true;
+    //     copter.openmv.last_frame_ms = millis();
+    // }
+    // else if (millis() - last_sim_new_data_time_ms < 10000)
+    // {
+    //     copter.openmv.cx = 0;
+    //     copter.openmv.cy = 0.8;
+    //     copter.openmv.cz = 1;
+    //     sim_openmv_new_data = true;
+    //     copter.openmv.last_frame_ms = millis();
+    // }
+    // else if (millis() - last_sim_new_data_time_ms < 15000)
+    // {
+    //     copter.openmv.cx = -0.4;
+    //     copter.openmv.cy = 0.8;
+    //     copter.openmv.cz = 1;
+    //     sim_openmv_new_data = true;
+    //     copter.openmv.last_frame_ms = millis();
+    // }
+    // else if (millis() - last_sim_new_data_time_ms < 20000)
+    // {
+    //     copter.openmv.cx = -0.4;
+    //     copter.openmv.cy = 0;
+    //     copter.openmv.cz = 1.5;
+    //     sim_openmv_new_data = true;
+    //     copter.openmv.last_frame_ms = millis();
+    // }
+    // else if (millis() - last_sim_new_data_time_ms < 25000)
+    // {
+    //     copter.openmv.cx = -0.4;
+    //     copter.openmv.cy = -0.8;
+    //     copter.openmv.cz = 1;
+    //     sim_openmv_new_data = true;
+    //     copter.openmv.last_frame_ms = millis();
+    // }
+    // else if (millis() - last_sim_new_data_time_ms < 30000)
+    // {
+    //     copter.openmv.cx = 0.4;
+    //     copter.openmv.cy = -0.8;
+    //     copter.openmv.cz = 1;
+    //     sim_openmv_new_data = true;
+    //     copter.openmv.last_frame_ms = millis();
+    // }
+    // else
+    // {
+    //     copter.openmv.cx = 0;
+    //     copter.openmv.cy = 0;
+    //     copter.openmv.cz = 2;
+    //     sim_openmv_new_data = false;
+    // }
+    //———— end of simulation
     
     static uint32_t last_set_pos_target_time_ms = 0;
 
-    // if(openmv.update() || sim_openmv_new_data)
-    if(copter.openmv.update() || sim_openmv_new_data)
+    // if(copter.openmv.update() || sim_openmv_new_data)
+    if(copter.openmv.update())
     {       
         copter.Log_Write_OpenMV();
 
