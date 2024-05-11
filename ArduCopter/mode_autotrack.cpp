@@ -71,12 +71,12 @@ void ModeAutoTrack::takeoff_run()
     {
         takeoff_finish = false;
         takeoff_finish_time = millis();
-        gcs().send_text(MAV_SEVERITY_INFO, "takeoff finished,wait 5 seconds");
+        gcs().send_text(MAV_SEVERITY_INFO, "takeoff finished");
     }
     if(auto_takeoff_complete && millis()-takeoff_finish_time >= 5000 )
     {
         set_submode(SubMode::AB_CRUISE);
-        gcs().send_text(MAV_SEVERITY_INFO, "start cruising now");
+        gcs().send_text(MAV_SEVERITY_INFO, "start cruising");
     }
     
     
@@ -160,10 +160,6 @@ void ModeAutoTrack::cruise_run()
     }
     else
     {
-        	// gcs().send_text(MAV_SEVERITY_INFO, 
-            //     "count: %d",
-            //      cruise_count);
-
         if (cruise_count < cruise_sum)
         {
             if (target_point == Point::B)
@@ -214,7 +210,7 @@ void ModeAutoTrack::cruise_run()
             {
                 if (wp_nav->reached_wp_destination())
                 {
-                    gcs().send_text(MAV_SEVERITY_INFO, "Cruise finished, wait 5 seconds, then land start");
+                    gcs().send_text(MAV_SEVERITY_INFO, "Cruise finished");
                     set_submode(SubMode::LAND);
                     cruise_flag = 0;
                     cruise_finish_time = millis();
@@ -240,6 +236,7 @@ void ModeAutoTrack::cruise_run()
         if (copter.openmv.update())
         {
             set_submode(SubMode::TRACK);
+            gcs().send_text(MAV_SEVERITY_INFO, "start tracking");
         } 
     }
 }
