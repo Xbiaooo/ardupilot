@@ -42,7 +42,7 @@ void ModeDrawStar::generate_path()
 
 }
 
-
+//你好
 //开始位置控制
 void ModeDrawStar::pos_control_start()
 {
