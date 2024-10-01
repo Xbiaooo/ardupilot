@@ -253,6 +253,12 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// Test - 添加新模式的模板
+#ifndef MODE_TEST_ENABLED
+# define MODE_TEST_ENABLED ENABLED
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
 // ZigZag - allow vehicle to fly in a zigzag manner with predefined point A B
 #ifndef MODE_ZIGZAG_ENABLED
 # define MODE_ZIGZAG_ENABLED !HAL_MINIMIZE_FEATURES

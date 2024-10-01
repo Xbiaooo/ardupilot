@@ -175,6 +175,14 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
             break;
 #endif
 
+#if MODE_TEST_ENABLED == ENABLED
+        case Mode::Number::TEST:
+            ret = &mode_test;
+            break;
+#endif
+
+
+
         default:
             break;
     }
