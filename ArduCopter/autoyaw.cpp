@@ -103,6 +103,11 @@ void Mode::AutoYaw::set_mode(Mode yaw_mode)
     }
 }
 
+float Mode::AutoYaw::get_yaw_angle_cd(void)
+{
+    return _yaw_angle_cd;
+}
+
 // set_fixed_yaw - sets the yaw look at heading for auto mode
 void Mode::AutoYaw::set_fixed_yaw(float angle_deg, float turn_rate_ds, int8_t direction, bool relative_angle)
 {

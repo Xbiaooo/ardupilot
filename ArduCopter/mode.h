@@ -273,6 +273,9 @@ public:
 
         bool reached_fixed_yaw_target();
 
+        float get_yaw_angle_cd(void);
+        float get_fixed_yaw_offset_cd(){return _fixed_yaw_offset_cd;};
+
 #if WEATHERVANE_ENABLED == ENABLED
         void update_weathervane(const int16_t pilot_yaw_cds);
 #endif
@@ -1531,8 +1534,21 @@ public:
 
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
-    bool allows_arming(AP_Arming::Method method) const override { return false; };
+    bool allows_arming(AP_Arming::Method method) const override { return true; };
     bool is_autopilot() const override { return true; }
+    bool in_guided_mode() const override { return true; }
+    bool has_user_takeoff(bool must_navigate) const override { return false; }
+
+    enum class SubMode : uint8_t{
+        TAKEOFF,
+        PROCESS,
+        LAND,
+    };
+
+    // set submode.  returns true on success, false on failure
+    void set_submode(SubMode new_submode);
+
+    
 
 protected:
 
@@ -1541,6 +1557,29 @@ protected:
 
 private:
 
+    SubMode _mode;
+    bool init_flag;
+
+    uint32_t land_start_time;
+    bool land_pause;
+
+    //SubMode _mode = SubMode::TAKEOFF;
+
+    void takeoff_init(int32_t alt_target_cm);
+    void process_init();
+    void land_init();
+
+    void takeoff_run();
+    void process_run();
+    void land_run();
+
+
+    void set_yaw();
+
+    // float yaw_cd;   //偏航角度
+    // float turn_rate_ds; //旋转角速度
+    // int8_t direction;   //旋转方向（正->顺时针）
+    // bool relative_angle; //角度类型(true->相对角)
 };
 
 #if FRAME_CONFIG == HELI_FRAME
