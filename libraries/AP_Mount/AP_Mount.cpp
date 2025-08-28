@@ -215,6 +215,20 @@ const AP_Param::GroupInfo AP_Mount::var_info[] = {
 
     // 24 is AVAILABLE
 
+    AP_GROUPINFO("_DEG_PTCH", 19, AP_Mount, state[0]._pitch_stb_deg, 20.0f),
+
+    AP_GROUPINFO("_DEG_RLL", 20, AP_Mount, state[0]._roll_stb_deg, 20.0f),
+
+    AP_GROUPINFO("_DELAY_TIME",  21, AP_Mount, state[0]._delay_time_ms,  1000),
+
+    AP_GROUPINFO("_KEY_OPEN",  22, AP_Mount, state[0]._key_open,  1),
+
+    AP_GROUPINFO("_SERVO_CHANNEL",  23, AP_Mount, state[0]._servo_channel,  9),
+
+
+
+
+
 #if AP_MOUNT_MAX_INSTANCES > 1
     // @Param: 2_DEFLT_MODE
     // @DisplayName: Mount default operating mode

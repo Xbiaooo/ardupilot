@@ -182,6 +182,15 @@ protected:
         AP_Float        _roll_stb_lead;     // roll lead control gain
         AP_Float        _pitch_stb_lead;    // pitch lead control gain
 
+        AP_Float        _pitch_stb_deg;      // pitch角度断电的阈值
+        AP_Float        _roll_stb_deg;       // roll角度断电的阈值
+
+        AP_Int32        _delay_time_ms;        // 恢复到正常角度内，延时多少时间后，重新供电
+
+        AP_Int8         _key_open;          // 是否启用控制继电器通断的功能 0-关闭 1-开启
+
+        AP_Int8         _servo_channel;     // 控制继电器通断的通道
+
         MAV_MOUNT_MODE  _mode;              // current mode (see MAV_MOUNT_MODE enum)
         struct Location _roi_target;        // roi target location
         bool _roi_target_set;

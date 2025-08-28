@@ -113,6 +113,51 @@ void AP_Mount_Servo::update()
     move_servo(_roll_idx, _angle_bf_output_deg.x*10, _state._roll_angle_min*0.1f, _state._roll_angle_max*0.1f);
     move_servo(_tilt_idx, _angle_bf_output_deg.y*10, _state._tilt_angle_min*0.1f, _state._tilt_angle_max*0.1f);
     move_servo(_pan_idx,  _angle_bf_output_deg.z*10, _state._pan_angle_min*0.1f, _state._pan_angle_max*0.1f);
+
+    
+    static bool stabilize_open = true;  //默认正常打开继电器给舵机供电，使用云台自稳功能
+    static uint32_t return_normal_start_ms = 0;//记录重新回到正常角度的起始时间
+
+    AP_AHRS &ahrs = AP::ahrs();
+    float pitch_deg = degrees(ahrs.pitch);
+    float roll_deg = degrees(ahrs.roll);
+
+    if (_state._key_open == 1)  //启用继电器控制功能
+    {
+        if (fabsf(pitch_deg) > _state._pitch_stb_deg || fabsf(roll_deg) > _state._roll_stb_deg)  //角度超过范围后，停止供电
+        {
+            stabilize_open = false;
+            SRV_Channels::set_output_pwm_chan(_state._servo_channel, 1100);
+            return_normal_start_ms = 0;
+        }
+        else if (!stabilize_open)   //角度正常，但当前断开供电
+        {
+            if (return_normal_start_ms == 0)
+            {
+                return_normal_start_ms = now;
+                SRV_Channels::set_output_pwm_chan(_state._servo_channel, 1100);
+            }
+            else if (now - return_normal_start_ms < 1000 )
+            {
+                SRV_Channels::set_output_pwm_chan(_state._servo_channel, 1100);
+            }
+            else if (now - return_normal_start_ms >= _state._delay_time_ms)//角度正常且时间超过1秒，重新打开供电
+            {
+                stabilize_open = true;
+                return_normal_start_ms = 0;
+                SRV_Channels::set_output_pwm_chan(_state._servo_channel, 1900);
+            }
+        }
+        else//角度正常，正常供电
+        {
+            SRV_Channels::set_output_pwm_chan(_state._servo_channel, 1900);
+        }
+    }
+    else
+    {
+        SRV_Channels::set_output_pwm_chan(_state._servo_channel, 1900);
+    }
+    
 }
 
 // set_mode - sets mount's mode
